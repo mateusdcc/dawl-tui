@@ -30,12 +30,14 @@ The event stream is newline-delimited JSON. Supported events are:
 
 ```json
 {"type":"node.started","nodeId":"developer"}
-{"type":"node.succeeded","nodeId":"developer"}
+{"type":"node.completed","nodeId":"developer"}
 {"type":"node.failed","nodeId":"reviewer"}
-{"type":"edge.traversed","edgeId":"review"}
+{"type":"condition.evaluated","nodeId":"pass","result":false}
+{"type":"retry.scheduled","nodeId":"approval.repeat"}
+{"type":"edge.traversed","edgeId":"review","status":"active"}
 ```
 
-Snake-case `node_id` and `edge_id` are accepted. Events update semantic styling only; they do not trigger layout, which preserves spatial stability.
+Snake-case `node_id` and `edge_id` are accepted, and `node.succeeded` is an alias of `node.completed`. Condition and retry records project onto semantic success, failure, and back edges. Events update styling only; they do not trigger layout, which preserves spatial stability.
 
 ## Native notation
 
