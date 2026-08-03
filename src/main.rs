@@ -1,5 +1,6 @@
 mod cli;
 mod interactive;
+mod tui;
 
 fn main() {
     if let Err(error) = cli::run() {
