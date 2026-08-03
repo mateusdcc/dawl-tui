@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::{Error, Result};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Diagram {
     #[serde(default = "schema")]
     pub schema: String,
@@ -179,6 +179,17 @@ pub enum Axis { Horizontal, Vertical }
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Relation { Before, After, Above, Below }
+
+impl Default for Diagram {
+    fn default() -> Self {
+        Self {
+            schema: schema(), id: String::new(), title: String::new(),
+            viewport: Viewport::default(), theme: theme(),
+            direction: Direction::default(), nodes: vec![], edges: vec![],
+            groups: vec![], texts: vec![], constraints: vec![],
+        }
+    }
+}
 
 impl Diagram {
     pub fn validate(&self) -> Result<()> {

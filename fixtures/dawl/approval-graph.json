@@ -1,0 +1,21 @@
+{
+  "title": "DAWL approval adapter fixture",
+  "nodes": [
+    {"id":"input","label":"INPUT","kind":"input"},
+    {"id":"developer","label":"Developer agent","kind":"agent","groupId":"approval"},
+    {"id":"reviewer","label":"Reviewer agent","kind":"reviewer","groupId":"approval"},
+    {"id":"pass","label":"pass?","kind":"decision","groupId":"approval"},
+    {"id":"approved","label":"approved","kind":"success"},
+    {"id":"output","label":"OUTPUT","kind":"output"}
+  ],
+  "edges": [
+    {"id":"e1","from":"input","to":"developer"},
+    {"id":"e2","from":"developer","to":"reviewer"},
+    {"id":"e3","from":"reviewer","to":"pass"},
+    {"id":"e4","from":"pass","to":"approved","label":"YES","kind":"success"},
+    {"id":"e5","from":"approved","to":"output"}
+  ],
+  "groups": [
+    {"id":"approval","label":"developUntilApproved","kind":"repeat"}
+  ]
+}

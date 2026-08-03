@@ -1,0 +1,3 @@
+{"schema":"dawl.event/v1","type":"node.started","nodeId":"developer"}
+{"schema":"dawl.event/v1","type":"node.succeeded","node_id":"developer"}
+{"schema":"dawl.event/v1","type":"edge.traversed","edge_id":"e2"}
