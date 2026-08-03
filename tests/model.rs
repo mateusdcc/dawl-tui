@@ -24,3 +24,11 @@ fn rejects_duplicate_node_ids() {
     let error = diagram.validate().unwrap_err();
     assert_eq!(error.code, "MODEL_DUPLICATE_ID");
 }
+
+#[test]
+fn rejects_cyclic_group_ancestry() {
+    let source = "diagram cycle \"Cycle\"\ngroup a \"A\" in b\ngroup b \"B\" in a\n";
+    let diagram = dawl_tui::parser::parse(source).unwrap();
+    let error = diagram.validate().unwrap_err();
+    assert_eq!(error.code, "MODEL_GROUP_CYCLE");
+}

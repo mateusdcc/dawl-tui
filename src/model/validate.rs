@@ -10,6 +10,7 @@ impl Diagram {
         let groups = unique(self.groups.iter().map(|item| item.id.as_str()), "group")?;
         let nodes = unique(self.nodes.iter().map(|item| item.id.as_str()), "node")?;
         self.validate_groups(&groups)?;
+        self.validate_group_cycles()?;
         self.validate_nodes(&groups)?;
         self.validate_edges(&nodes)
     }
@@ -24,6 +25,21 @@ impl Diagram {
             if group.parent.as_deref().is_some_and(|id| !groups.contains(id)) {
                 return Err(Error::input("MODEL_UNKNOWN_GROUP", group.id.clone()));
             }
+        }
+        Ok(())
+    }
+
+    fn validate_group_cycles(&self) -> Result<()> {
+        for group in &self.groups { self.validate_group_chain(&group.id)?; }
+        Ok(())
+    }
+
+    fn validate_group_chain(&self, start: &str) -> Result<()> {
+        let mut seen = HashSet::new();
+        let mut current = Some(start);
+        while let Some(id) = current {
+            if !seen.insert(id) { return Err(Error::input("MODEL_GROUP_CYCLE", start)); }
+            current = self.groups.iter().find(|group| group.id == id).and_then(|group| group.parent.as_deref());
         }
         Ok(())
     }
