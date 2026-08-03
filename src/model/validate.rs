@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::error::{Error, Result};
 
-use super::Diagram;
+use super::types::Diagram;
 
 impl Diagram {
     pub fn validate(&self) -> Result<()> {
@@ -34,7 +34,7 @@ impl Diagram {
         Ok(())
     }
 
-    fn validate_group_chain(&self, start: &str) -> Result<()> {
+    fn validate_group_chain<'a>(&'a self, start: &'a str) -> Result<()> {
         let mut seen = HashSet::new();
         let mut current = Some(start);
         while let Some(id) = current {

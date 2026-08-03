@@ -129,7 +129,7 @@ fn match_score(event_id: &str, candidate_id: &str, label: &str) -> usize {
     let event = tokens(event_id);
     let overlap = tokens(candidate_id).iter().filter(|token| event.contains(token)).count();
     let label = normalize(label.lines().next().unwrap_or_default());
-    overlap + usize::from(label.len() > 2 && normalize(event_id).contains(&label)) * 20
+    overlap + if label.len() > 2 && normalize(event_id).contains(&label) { 20 } else { 0 }
 }
 
 fn tokens(value: &str) -> Vec<String> {

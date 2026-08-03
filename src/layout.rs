@@ -55,7 +55,7 @@ fn layout_groups(diagram: &Diagram, nodes: &IndexMap<String, Rect>) -> Result<In
 }
 
 pub(super) fn refresh_inferred_groups(diagram: &Diagram, nodes: &IndexMap<String, Rect>, groups: &mut IndexMap<String, Rect>) {
-    groups.retain(|id, _| diagram.groups.iter().any(|group| group.id == *id && group.at.is_some()));
+    groups.retain(|id, _| diagram.groups.iter().any(|group| group.id == id.as_str() && group.at.is_some()));
     for _ in 0..=diagram.groups.len() { infer_groups(diagram, nodes, groups); }
 }
 

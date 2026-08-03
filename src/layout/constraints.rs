@@ -114,7 +114,7 @@ fn shift_group(
     }
 }
 
-fn inside(mut current: &str, target: &str, diagram: &Diagram) -> bool {
+fn inside<'a>(mut current: &'a str, target: &str, diagram: &'a Diagram) -> bool {
     loop {
         if current == target { return true; }
         let Some(parent) = diagram.groups.iter().find(|group| group.id == current)

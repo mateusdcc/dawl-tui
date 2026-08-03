@@ -85,8 +85,7 @@ Automatic placement is the default. Exact layouts can progressively add authorit
 
 ```dtui
 node developer "Developer agent" at 45,9 size 15x4 kind agent in loop
-edge retry failed -> developer kind back \
-  from_port west to_port south via 67,14 67,16 52,16 52,13
+edge retry failed -> developer kind back from_port west to_port south via 67,14 67,16 52,16 52,13
 ```
 
 Supported placement relations are `before`, `after`, `above`, and `below`. Alignment is `horizontal` or `vertical`. Ports are `north`, `east`, `south`, and `west`.

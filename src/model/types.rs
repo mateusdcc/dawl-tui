@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Axis, Direction, EdgeKind, GroupKind, NodeKind, Point, Port, Relation, Size, TextKind};
+use super::kinds::{Axis, Direction, EdgeKind, GroupKind, NodeKind, Point, Port, Relation, Size, TextKind};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Diagram {
