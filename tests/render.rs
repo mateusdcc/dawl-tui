@@ -70,3 +70,13 @@ fn traversed_edge_uses_runtime_style() {
     let grid = render_diagram(&diagram, &layout, &state).unwrap();
     assert!(grid.cells.iter().any(|cell| cell.style == dawl_tui::theme::Style::Running));
 }
+
+#[test]
+fn wide_labels_preserve_node_borders() {
+    let source = "diagram wide \"Wide\"\nviewport 20x8\nnode n \"界界界\" at 2,3 size 6x3\n";
+    let diagram = parse(source).unwrap();
+    let layout = layout_diagram(&diagram, &Default::default()).unwrap();
+    let grid = render_diagram(&diagram, &layout, &DiagramState::default()).unwrap();
+    assert_eq!(grid.visible_char(2, 4), '│');
+    assert_eq!(grid.visible_char(7, 4), '│');
+}

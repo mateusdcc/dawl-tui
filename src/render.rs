@@ -1,4 +1,4 @@
-use unicode_width::UnicodeWidthStr;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use crate::canvas::{Grid, Rect};
 use crate::error::Result;
@@ -173,7 +173,15 @@ fn arrow_before(from: Point, to: Point) -> (Point, char) {
 }
 
 fn clip(value: &str, width: u16) -> String {
-    value.chars().take(usize::from(width)).collect()
+    let mut output = String::new();
+    let mut used = 0;
+    for glyph in value.chars() {
+        let glyph_width = UnicodeWidthChar::width(glyph).unwrap_or(0) as u16;
+        if used.saturating_add(glyph_width) > width { break; }
+        output.push(glyph);
+        used = used.saturating_add(glyph_width);
+    }
+    output
 }
 
 fn center_y(rect: Rect) -> u16 { rect.y.saturating_add(rect.height / 2) }
