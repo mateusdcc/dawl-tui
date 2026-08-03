@@ -163,9 +163,7 @@ fn ordered(a: u16, b: u16) -> (u16, u16) { if a <= b { (a, b) } else { (b, a) } 
 
 fn resolve(cell: &Cell) -> char {
     if cell.glyph != ' ' || cell.continuation { return cell.glyph; }
-    match cell.line & 15 {
-        1 | 4 | 5 => '│', 2 | 8 | 10 => '─', 3 => '└', 6 => '┌',
-        9 => '┘', 12 => '┐', 7 => '├', 11 => '┴', 13 => '┤', 14 => '┬',
-        15 => '┼', _ => ' ',
-    }
+    const GLYPHS: [char; 16] = [' ', '│', '─', '└', '│', '│', '┌', '├',
+        '─', '┘', '─', '┴', '┐', '┤', '┬', '┼'];
+    GLYPHS[usize::from(cell.line & 15)]
 }
