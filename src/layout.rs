@@ -1,6 +1,5 @@
+mod automatic;
 mod constraints;
-
-use std::collections::HashMap;
 
 use indexmap::IndexMap;
 use unicode_width::UnicodeWidthStr;
@@ -28,9 +27,8 @@ impl LayoutOptions {
 
 pub fn layout_diagram(diagram: &Diagram, options: &LayoutOptions) -> Result<Layout> {
     diagram.validate()?;
-    let ranks = ranks(diagram);
     let mut nodes = explicit_nodes(diagram);
-    place_automatic(diagram, &ranks, &mut nodes);
+    automatic::place(diagram, &mut nodes)?;
     let mut groups = layout_groups(diagram, &nodes)?;
     constraints::apply(diagram, &mut nodes, &mut groups)?;
     refresh_inferred_groups(diagram, &nodes, &mut groups);
@@ -42,46 +40,6 @@ fn explicit_nodes(diagram: &Diagram) -> IndexMap<String, Rect> {
     diagram.nodes.iter().filter_map(|node| {
         node.at.map(|point| (node.id.clone(), rect(point, node.size.unwrap_or_else(|| measure(&node.label)))))
     }).collect()
-}
-
-fn place_automatic(diagram: &Diagram, ranks: &HashMap<String, usize>, nodes: &mut IndexMap<String, Rect>) {
-    let mut slots: HashMap<usize, u16> = HashMap::new();
-    for node in &diagram.nodes {
-        if nodes.contains_key(&node.id) { continue; }
-        let rank = *ranks.get(&node.id).unwrap_or(&0);
-        let slot = slots.entry(rank).or_insert(0);
-        let point = automatic_point(diagram.direction, rank, *slot);
-        nodes.insert(node.id.clone(), rect(point, node.size.unwrap_or_else(|| measure(&node.label))));
-        *slot = slot.saturating_add(1);
-    }
-}
-
-fn automatic_point(direction: Direction, rank: usize, slot: u16) -> Point {
-    let rank = u16::try_from(rank).unwrap_or(u16::MAX / 24);
-    match direction {
-        Direction::Right => Point { x: 2 + rank.saturating_mul(24), y: 4 + slot.saturating_mul(6) },
-        Direction::Down => Point { x: 2 + slot.saturating_mul(24), y: 4 + rank.saturating_mul(6) },
-    }
-}
-
-fn ranks(diagram: &Diagram) -> HashMap<String, usize> {
-    let mut result = diagram.nodes.iter().map(|node| (node.id.clone(), 0)).collect::<HashMap<_, _>>();
-    for _ in 0..diagram.nodes.len() {
-        let mut changed = false;
-        for edge in diagram.edges.iter().filter(|edge| edge.kind != crate::model::EdgeKind::Back) {
-            changed |= relax(&mut result, &edge.from, &edge.to);
-        }
-        if !changed { break; }
-    }
-    result
-}
-
-fn relax(ranks: &mut HashMap<String, usize>, from: &str, to: &str) -> bool {
-    let next = ranks.get(from).copied().unwrap_or(0).saturating_add(1);
-    let current = ranks.get(to).copied().unwrap_or(0);
-    if next <= current { return false; }
-    ranks.insert(to.into(), next);
-    true
 }
 
 fn layout_groups(diagram: &Diagram, nodes: &IndexMap<String, Rect>) -> Result<IndexMap<String, Rect>> {
@@ -145,7 +103,7 @@ fn canvas_size(diagram: &Diagram, options: &LayoutOptions, nodes: &IndexMap<Stri
 
 fn rect(point: Point, size: Size) -> Rect { Rect { x: point.x, y: point.y, width: size.width, height: size.height } }
 
-fn measure(label: &str) -> Size {
+pub(super) fn measure(label: &str) -> Size {
     let width = label.lines().map(UnicodeWidthStr::width).max().unwrap_or(1) as u16;
     let height = label.lines().count().max(1) as u16;
     Size { width: width.saturating_add(4), height: height.saturating_add(2) }
