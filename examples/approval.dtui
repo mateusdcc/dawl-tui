@@ -1,0 +1,112 @@
+diagram developIssuesUntilApproved "developIssuesUntilApproved: full agent flow"
+viewport 180x52
+theme midnight
+direction right
+
+node input "INPUT\n\nissues: [65, 66, …]\nmaxIterations = M (default 5)" at 1,12 size 19x8 kind input
+node phase_issues "phase: issues" at 3,21 size 16x3 kind phase
+
+group issues "parallel(\"issues\")" at 23,3 size 70x38 kind parallel
+
+group issue65 "issue-65" at 24,5 size 66x11 kind lane in issues
+group approval65 "developUntilApproved" at 43,6 size 45x9 kind group in issue65
+group repeat65 "iteration 1…M" at 44,8 size 42x7 kind repeat in approval65 dashed
+node wt65 "withWorktree(\"issue-65\")\nisolated branch + path" at 25,8 size 18x6 kind shell in issue65
+node dev65 "Developer agent\nimplement task /\naddress findings" at 45,9 size 15x4 kind agent in repeat65
+node rev65 "Reviewer agent\n(pass, findings)" at 61,9 size 13x4 kind reviewer in repeat65
+decision pass65 "pass?" at 75,9 size 8x4 in repeat65
+node fail65 "failed review" at 71,13 size 14x2 kind failure in repeat65
+text note65 "NEW Developer + NEW Reviewer every iteration" at 44,15 kind dim
+
+group issue66 "issue-66" at 24,17 size 66x11 kind lane in issues
+group approval66 "developUntilApproved" at 43,18 size 45x9 kind group in issue66
+group repeat66 "iteration 1…M" at 44,20 size 42x7 kind repeat in approval66 dashed
+node wt66 "withWorktree(\"issue-66\")\nisolated branch + path" at 25,20 size 18x6 kind shell in issue66
+node dev66 "Developer agent\nimplement task /\naddress findings" at 45,21 size 15x4 kind agent in repeat66
+node rev66 "Reviewer agent\n(pass, findings)" at 61,21 size 13x4 kind reviewer in repeat66
+decision pass66 "pass?" at 75,21 size 8x4 in repeat66
+node fail66 "failed review" at 71,25 size 14x2 kind failure in repeat66
+text note66 "NEW Developer + NEW Reviewer every iteration" at 44,27 kind dim
+
+group issueN "issue-N" at 24,29 size 66x11 kind lane in issues
+group approvalN "developUntilApproved" at 43,30 size 45x9 kind group in issueN
+group repeatN "iteration 1…M" at 44,32 size 42x7 kind repeat in approvalN dashed
+node wtN "withWorktree(\"issue-N\")\nisolated branch + path" at 25,32 size 18x6 kind shell in issueN
+node devN "Developer agent\nimplement task /\naddress findings" at 45,33 size 15x4 kind agent in repeatN
+node revN "Reviewer agent\n(pass, findings)" at 61,33 size 13x4 kind reviewer in repeatN
+decision passN "pass?" at 75,33 size 8x4 in repeatN
+node failN "failed review" at 71,37 size 14x2 kind failure in repeatN
+text noteN "NEW Developer + NEW Reviewer every iteration" at 44,39 kind dim
+
+node issueResults "issueResults" at 94,21 size 11x5 kind join
+node skipMerge "skip merge" at 94,27 size 11x3 kind failure
+node phase_merge "phase: merge" at 108,21 size 12x3 kind phase
+
+group mergeApproval "developUntilApproved\non main" at 121,5 size 23x35 kind group
+group mergeRepeat "iteration 1…M" at 122,7 size 21x22 kind repeat in mergeApproval dashed
+node mergeDev "Merge\nDeveloper agent" at 126,10 size 14x4 kind agent in mergeRepeat
+node mergeRev "Merge\nReviewer agent" at 126,16 size 14x4 kind reviewer in mergeRepeat
+decision mergePass "pass?" at 128,21 size 10x3 in mergeRepeat
+node mergeFailed "failed review" at 126,25 size 14x3 kind failure in mergeRepeat
+node mergeSteps "merge approved branches\nresolve conflicts\nrun tests\ncommit\nclean tree" at 122,30 size 21x9 kind activity in mergeApproval
+text mergeAfter "after M\nfailures" at 139,22 kind dim
+text noneApproved "if none approved" at 108,39 kind dim
+
+node cleanup "shell cleanup\nremove clean,\nmerged worktrees —\nnot an agent" at 147,19 size 16x10 kind shell
+node phase_summary "phase: summary" at 164,21 size 15x3 kind phase
+node summary "Summarizer agent ×1 —\nread results only;\ndo not change files" at 164,29 size 15x7 kind activity
+node output "OUTPUT\n\n{ issues, issueResults,\n  merge, summary }" at 161,38 size 18x6 kind output
+
+group metrics "" at 1,44 size 178x7 kind panel
+text agentsTitle "Agents spawned" at 78,44 kind title
+text icon1 "♙♙" at 5,47 kind metric
+text metric1 "Per issue: 2 × iterations\n(Developer + Reviewer)" at 14,46 kind plain
+text separator1 "│\n│\n│\n│\n│" at 49,45 kind dim
+text icon2 "⌘" at 53,47 kind metric
+text metric2 "Merge, when any issue\nis approved: 2 × iterations" at 59,46 kind plain
+text separator2 "│\n│\n│\n│\n│" at 92,45 kind dim
+text icon3 "♙" at 96,47 kind metric
+text metric3 "Summary: exactly 1" at 103,47 kind plain
+text separator3 "│\n│\n│\n│\n│" at 128,45 kind dim
+text icon4 "▥" at 133,47 kind metric
+text metric4 "Worst case: 2NM + 2M + 1 agents" at 140,47 kind plain
+
+edge input_phase input -> phase_issues from_port south to_port north
+edge fork65 phase_issues -> wt65 from_port east to_port west via 21,22 21,11
+edge fork66 phase_issues -> wt66 from_port east to_port west via 21,22 21,23
+edge forkN phase_issues -> wtN from_port east to_port west via 21,22 21,35
+
+edge wt_dev65 wt65 -> dev65 from_port east to_port west
+edge dev_rev65 dev65 -> rev65 from_port east to_port west
+edge rev_pass65 rev65 -> pass65 from_port east to_port west
+edge yes65 pass65 -> issueResults kind success label "YES" from_port east to_port west via 86,11 86,20 91,20 91,23
+edge no65 pass65 -> fail65 kind failure label "NO" from_port south to_port north
+edge retry65 fail65 -> dev65 kind back label "findings" from_port west to_port south via 67,14 67,16 52,16 52,13
+
+edge wt_dev66 wt66 -> dev66 from_port east to_port west
+edge dev_rev66 dev66 -> rev66 from_port east to_port west
+edge rev_pass66 rev66 -> pass66 from_port east to_port west
+edge yes66 pass66 -> issueResults kind success label "YES" from_port east to_port west via 89,23 91,23
+edge no66 pass66 -> fail66 kind failure label "NO" from_port south to_port north
+edge retry66 fail66 -> dev66 kind back label "findings" from_port west to_port south via 67,26 67,28 52,28 52,25
+
+edge wt_devN wtN -> devN from_port east to_port west
+edge dev_revN devN -> revN from_port east to_port west
+edge rev_passN revN -> passN from_port east to_port west
+edge yesN passN -> issueResults kind success label "YES" from_port east to_port west via 86,35 86,26 91,26 91,23
+edge noN passN -> failN kind failure label "NO" from_port south to_port north
+edge retryN failN -> devN kind back label "findings" from_port west to_port south via 67,38 67,40 52,40 52,37
+
+edge results_merge issueResults -> phase_merge from_port east to_port west
+edge results_skip issueResults -> skipMerge kind failure from_port south to_port north
+edge phase_mdev phase_merge -> mergeDev from_port east to_port west via 120,22 120,12
+edge mdev_mrev mergeDev -> mergeRev from_port south to_port north
+edge mrev_pass mergeRev -> mergePass from_port south to_port north
+edge mpass_cleanup mergePass -> cleanup kind success label "YES" from_port east to_port west via 145,22 145,24
+edge mpass_failed mergePass -> mergeFailed kind failure label "NO" from_port south to_port north
+edge mretry mergeFailed -> mergeDev kind back label "findings" from_port west to_port west via 123,26 123,12
+edge mpass_steps mergePass -> mergeSteps kind muted label "after M failures" from_port south to_port north via 142,24 142,29 132,29
+edge steps_cleanup mergeSteps -> cleanup kind success from_port east to_port west via 145,34 145,24
+edge cleanup_summary cleanup -> phase_summary from_port east to_port west via 163,24
+edge summary_agent phase_summary -> summary from_port south to_port north
+edge summary_output summary -> output from_port south to_port north
