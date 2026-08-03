@@ -1,3 +1,5 @@
+mod constraints;
+
 use std::collections::HashMap;
 
 use indexmap::IndexMap;
@@ -5,7 +7,7 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::canvas::Rect;
 use crate::error::{Error, Result};
-use crate::model::{Axis, Constraint, Diagram, Direction, Point, Size};
+use crate::model::{Diagram, Direction, Point, Size};
 
 #[derive(Clone, Debug)]
 pub struct Layout {
@@ -29,8 +31,9 @@ pub fn layout_diagram(diagram: &Diagram, options: &LayoutOptions) -> Result<Layo
     let ranks = ranks(diagram);
     let mut nodes = explicit_nodes(diagram);
     place_automatic(diagram, &ranks, &mut nodes);
-    apply_alignments(diagram, &mut nodes)?;
-    let groups = layout_groups(diagram, &nodes)?;
+    let mut groups = layout_groups(diagram, &nodes)?;
+    constraints::apply(diagram, &mut nodes, &mut groups)?;
+    refresh_inferred_groups(diagram, &nodes, &mut groups);
     let size = canvas_size(diagram, options, &nodes, &groups);
     Ok(Layout { nodes, groups, size })
 }
@@ -81,25 +84,6 @@ fn relax(ranks: &mut HashMap<String, usize>, from: &str, to: &str) -> bool {
     true
 }
 
-fn apply_alignments(diagram: &Diagram, nodes: &mut IndexMap<String, Rect>) -> Result<()> {
-    for constraint in &diagram.constraints {
-        if let Constraint::Align { axis, ids } = constraint {
-            align(nodes, *axis, ids)?;
-        }
-    }
-    Ok(())
-}
-
-fn align(nodes: &mut IndexMap<String, Rect>, axis: Axis, ids: &[String]) -> Result<()> {
-    let first = ids.first().and_then(|id| nodes.get(id)).copied()
-        .ok_or_else(|| Error::layout("LAYOUT_ALIGN", "alignment has no known node"))?;
-    for id in ids.iter().skip(1) {
-        let item = nodes.get_mut(id).ok_or_else(|| Error::layout("LAYOUT_ALIGN", id.clone()))?;
-        match axis { Axis::Horizontal => item.y = first.y, Axis::Vertical => item.x = first.x }
-    }
-    Ok(())
-}
-
 fn layout_groups(diagram: &Diagram, nodes: &IndexMap<String, Rect>) -> Result<IndexMap<String, Rect>> {
     let mut groups = IndexMap::new();
     for group in &diagram.groups {
@@ -110,6 +94,11 @@ fn layout_groups(diagram: &Diagram, nodes: &IndexMap<String, Rect>) -> Result<In
     }
     for _ in 0..=diagram.groups.len() { infer_groups(diagram, nodes, &mut groups); }
     Ok(groups)
+}
+
+pub(super) fn refresh_inferred_groups(diagram: &Diagram, nodes: &IndexMap<String, Rect>, groups: &mut IndexMap<String, Rect>) {
+    groups.retain(|id, _| diagram.groups.iter().any(|group| group.id == *id && group.at.is_some()));
+    for _ in 0..=diagram.groups.len() { infer_groups(diagram, nodes, groups); }
 }
 
 fn infer_groups(diagram: &Diagram, nodes: &IndexMap<String, Rect>, groups: &mut IndexMap<String, Rect>) {

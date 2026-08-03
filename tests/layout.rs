@@ -31,3 +31,39 @@ fn explicit_layout_is_deterministic() {
     assert_eq!(first.nodes["a"], second.nodes["a"]);
     assert!(first.groups["g"].contains(dawl_tui::model::Point { x: 8, y: 7 }));
 }
+
+#[test]
+fn place_constraint_enforces_terminal_separation() {
+    let graph = parse("diagram p \"Place\"\nnode a \"A\"\nnode b \"B\"\nplace a before b\n").unwrap();
+    let layout = layout_diagram(&graph, &Default::default()).unwrap();
+    assert!(layout.nodes["a"].right().saturating_add(4) <= layout.nodes["b"].x);
+}
+
+#[test]
+fn align_constraint_accepts_compound_groups() {
+    let source = r#"
+    diagram groups "Groups"
+    group one "One"
+    group two "Two"
+    node a "A" at 5,5 in one
+    node b "B" at 30,15 in two
+    align vertical one two
+    "#;
+    let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
+    assert_eq!(layout.groups["one"].x, layout.groups["two"].x);
+}
+
+#[test]
+fn moving_a_group_preserves_child_offsets() {
+    let source = r#"
+    diagram groups "Groups"
+    group one "One"
+    node a "A" at 5,5 in one
+    node b "B" at 6,10
+    place one before b
+    "#;
+    let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
+    let group = layout.groups["one"];
+    assert!(group.right().saturating_add(4) <= layout.nodes["b"].x);
+    assert!(group.contains(dawl_tui::model::Point { x: layout.nodes["a"].x, y: layout.nodes["a"].y }));
+}
