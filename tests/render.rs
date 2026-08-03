@@ -5,35 +5,19 @@ use dawl_tui::state::DiagramState;
 
 #[test]
 fn paints_nested_groups_semantic_paths_and_metrics() {
-    let source = r#"
-    diagram approval "developIssuesUntilApproved: full agent flow"
-    viewport 90x28
-    group issues "parallel(issues)" at 2,3 size 55x18 kind parallel
-    group repeat "developUntilApproved" at 16,6 size 35x11 kind repeat in issues dashed
-    node developer "Developer agent" at 19,9 size 14x3 kind agent in repeat
-    node reviewer "Reviewer agent" at 36,9 size 13x3 kind reviewer in repeat
-    decision pass "pass?" at 51,9 size 7x3 in repeat
-    node approved "YES" at 63,7 size 7x3 kind success
-    node failed "failed review" at 42,14 size 15x3 kind failure in repeat
-    edge work developer -> reviewer
-    edge review reviewer -> pass
-    edge yes pass -> approved kind success label "YES"
-    edge no pass -> failed kind failure label "NO"
-    edge retry failed -> developer kind back label "findings"
-    text metric "Worst case: 2NM + 2M + 1 agents" at 3,24 kind metric
-    "#;
-    let diagram = parse(source).unwrap();
+    let diagram = parse(RENDER_SOURCE).unwrap();
     let layout = layout_diagram(&diagram, &Default::default()).unwrap();
     let grid = render_diagram(&diagram, &layout, &DiagramState::default()).unwrap();
     let text = plain(&grid);
-    assert!(text.contains("developIssuesUntilApproved: full agent flow"));
-    assert!(text.contains("parallel(issues)"));
-    assert!(text.contains("developUntilApproved"));
-    assert!(text.contains("Developer agent"));
-    assert!(text.contains("YES"));
-    assert!(text.contains("NO"));
-    assert!(text.contains("findings"));
-    assert!(text.contains("Worst case: 2NM + 2M + 1 agents"));
+    assert_labels(&text);
+}
+
+fn assert_labels(text: &str) {
+    for label in ["developIssuesUntilApproved: full agent flow", "parallel(issues)",
+        "developUntilApproved", "Developer agent", "YES", "NO", "findings",
+        "Worst case: 2NM + 2M + 1 agents"] {
+        assert!(text.contains(label), "missing {label}");
+    }
 }
 
 #[test]
@@ -57,3 +41,21 @@ fn plain(grid: &dawl_tui::canvas::Grid) -> String {
         (0..grid.width).map(|x| grid.visible_char(x, y)).collect::<String>()
     }).collect::<Vec<_>>().join("\n")
 }
+
+const RENDER_SOURCE: &str = r#"
+    diagram approval "developIssuesUntilApproved: full agent flow"
+    viewport 90x28
+    group issues "parallel(issues)" at 2,3 size 55x18 kind parallel
+    group repeat "developUntilApproved" at 16,6 size 35x11 kind repeat in issues dashed
+    node developer "Developer agent" at 19,9 size 14x3 kind agent in repeat
+    node reviewer "Reviewer agent" at 36,9 size 13x3 kind reviewer in repeat
+    decision pass "pass?" at 51,9 size 7x3 in repeat
+    node approved "YES" at 63,7 size 7x3 kind success
+    node failed "failed review" at 42,14 size 15x3 kind failure in repeat
+    edge work developer -> reviewer
+    edge review reviewer -> pass
+    edge yes pass -> approved kind success label "YES"
+    edge no pass -> failed kind failure label "NO"
+    edge retry failed -> developer kind back label "findings"
+    text metric "Worst case: 2NM + 2M + 1 agents" at 3,24 kind metric
+    "#;

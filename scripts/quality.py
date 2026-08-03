@@ -9,7 +9,8 @@ SKIP = {"target", ".git", ".worktrees"}
 
 def rust_files():
     for path in ROOT.rglob("*.rs"):
-        if not any(part in SKIP for part in path.parts):
+        relative = path.relative_to(ROOT)
+        if not any(part in SKIP for part in relative.parts):
             yield path
 
 
