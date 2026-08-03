@@ -1,6 +1,8 @@
 .worktrees/
 /target/
 /SETUP.sh
+/artifacts/
+__pycache__/
 *.svg
 *.ansi
 .DS_Store

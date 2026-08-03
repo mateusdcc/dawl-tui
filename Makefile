@@ -1,7 +1,9 @@
 .PHONY: verify example bench
+
 verify:
+	python3 -m unittest scripts/test_quality.py
 	python3 scripts/quality.py
-	cargo fmt --check
+	cargo check --all-targets
 	cargo clippy --all-targets -- -D warnings
 	cargo test --all-targets
 
