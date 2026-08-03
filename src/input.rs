@@ -47,9 +47,15 @@ fn parse_json(source: &str) -> Result<Diagram> {
 
 fn normalize(value: &mut Value) -> Result<()> {
     let object = value.as_object_mut().ok_or_else(json_object_error)?;
-    object.entry("schema").or_insert(Value::String("dawl.diagram/v1".into()));
-    object.entry("id").or_insert(Value::String("diagram".into()));
-    object.entry("theme").or_insert(Value::String("midnight".into()));
+    object
+        .entry("schema")
+        .or_insert(Value::String("dawl.diagram/v1".into()));
+    object
+        .entry("id")
+        .or_insert(Value::String("diagram".into()));
+    object
+        .entry("theme")
+        .or_insert(Value::String("midnight".into()));
     normalize_nodes(object.get_mut("nodes"));
     normalize_groups(object.get_mut("groups"));
     Ok(())
@@ -68,12 +74,18 @@ fn normalize_groups(value: Option<&mut Value>) {
 }
 
 fn array_items(value: Option<&mut Value>) -> Vec<&mut serde_json::Map<String, Value>> {
-    value.and_then(Value::as_array_mut).into_iter().flatten()
-        .filter_map(Value::as_object_mut).collect()
+    value
+        .and_then(Value::as_array_mut)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_object_mut)
+        .collect()
 }
 
 fn rename(object: &mut serde_json::Map<String, Value>, old: &str, new: &str) {
-    if object.contains_key(new) { return; }
+    if object.contains_key(new) {
+        return;
+    }
     if let Some(value) = object.remove(old) {
         object.insert(new.into(), value);
     }

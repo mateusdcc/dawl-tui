@@ -2,7 +2,7 @@
 
 Deterministic compound workflow diagrams for the terminal, written in Rust.
 
-![Reference approval workflow](docs/assets/reference-approval-flow.png)
+![Approval Workflow Diagram](docs/assets/approval.png)
 
 `dawl-tui` turns either a compact native notation or a DAWL graph into a dense Unicode/ANSI diagram. It combines automatic layered placement with explicit constraints, ports, and route points, so ordinary graphs need little layout syntax while reference-grade compositions remain reproducible cell for cell.
 
@@ -32,14 +32,29 @@ cargo build --release
 ./target/release/dawl-tui --help
 ```
 
-## Render the reference diagram
+## Examples
 
-The bundled composition targets a `180 × 52` terminal-cell scene and mirrors the supplied approval-workflow reference:
+### 1. Multi-Agent Approval Flow
+
+Real output rendered from `examples/approval.dtui` (`180 × 52` scene):
+
+![Approval Flow Diagram Output](docs/assets/approval.png)
 
 ```bash
-dawl-tui render examples/approval.dtui \
-  --format ansi --width 180 --height 52
+dawl-tui render examples/approval.dtui --format ansi --width 180 --height 52
 ```
+
+### 2. CI/CD Deployment Pipeline
+
+Real output rendered from `examples/simple.dtui`:
+
+![CI/CD Pipeline Diagram Output](docs/assets/simple.png)
+
+```bash
+dawl-tui render examples/simple.dtui --format ansi --width 100 --height 26
+```
+
+## Render diagrams
 
 Other deterministic exports:
 

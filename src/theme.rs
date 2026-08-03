@@ -43,7 +43,9 @@ impl Rgb {
 
 impl Palette {
     pub const fn midnight() -> Self {
-        Self { background: Rgb::new(13, 27, 47) }
+        Self {
+            background: Rgb::new(13, 27, 47),
+        }
     }
 
     pub const fn background(self) -> Rgb {

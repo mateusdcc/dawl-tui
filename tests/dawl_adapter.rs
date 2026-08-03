@@ -43,14 +43,18 @@ fn accepts_all_node_and_group_kinds_emitted_by_dawl() {
     assert_eq!(graph.groups.len(), 1);
 }
 
-
 #[test]
 fn projects_current_dawl_condition_and_retry_events() {
     let graph = dawl_tui::input::parse_source(Path::new("graph.json"), event_graph()).unwrap();
     let mut state = DiagramState::default();
-    apply(&mut state, &graph, r#"{"type":"node.completed","nodeId":"flow.approval.developer"}"#);
-    apply(&mut state, &graph, r#"{"type":"condition.evaluated","nodeId":"flow.approval.pass","result":false}"#);
-    apply(&mut state, &graph, r#"{"type":"retry.scheduled","nodeId":"flow.approval.repeat"}"#);
+    let events = [
+        r#"{"type":"node.completed","nodeId":"flow.approval.developer"}"#,
+        r#"{"type":"condition.evaluated","nodeId":"flow.approval.pass","result":false}"#,
+        r#"{"type":"retry.scheduled","nodeId":"flow.approval.repeat"}"#,
+    ];
+    for event in events {
+        apply(&mut state, &graph, event);
+    }
     assert_eq!(state.node("developer"), dawl_tui::state::Status::Succeeded);
     assert_eq!(state.node("pass"), dawl_tui::state::Status::Failed);
     assert_eq!(state.edge("no"), dawl_tui::state::Status::Running);

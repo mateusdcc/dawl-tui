@@ -14,7 +14,16 @@ fn wide_glyph_consumes_two_cells() {
 #[test]
 fn box_junctions_are_resolved() {
     let mut grid = Grid::new(6, 4);
-    grid.draw_box(Rect { x: 0, y: 0, width: 6, height: 4 }, Style::Group, false);
+    grid.draw_box(
+        Rect {
+            x: 0,
+            y: 0,
+            width: 6,
+            height: 4,
+        },
+        Style::Group,
+        false,
+    );
     assert_eq!(grid.visible_char(0, 0), '┌');
     assert_eq!(grid.visible_char(5, 3), '┘');
 }

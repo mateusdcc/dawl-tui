@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use super::kinds::{Axis, Direction, EdgeKind, GroupKind, NodeKind, Point, Port, Relation, Size, TextKind};
+use super::kinds::{
+    Axis, Direction, EdgeKind, GroupKind, NodeKind, Point, Port, Relation, Size, TextKind,
+};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Diagram {
@@ -92,20 +94,38 @@ pub struct TextItem {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Constraint {
-    Align { axis: Axis, ids: Vec<String> },
-    Place { first: String, relation: Relation, second: String },
+    Align {
+        axis: Axis,
+        ids: Vec<String>,
+    },
+    Place {
+        first: String,
+        relation: Relation,
+        second: String,
+    },
 }
 
 impl Default for Diagram {
     fn default() -> Self {
         Self {
-            schema: schema(), id: String::new(), title: String::new(),
-            viewport: Viewport::default(), theme: theme(),
-            direction: Direction::default(), nodes: vec![], edges: vec![],
-            groups: vec![], texts: vec![], constraints: vec![],
+            schema: schema(),
+            id: String::new(),
+            title: String::new(),
+            viewport: Viewport::default(),
+            theme: theme(),
+            direction: Direction::default(),
+            nodes: vec![],
+            edges: vec![],
+            groups: vec![],
+            texts: vec![],
+            constraints: vec![],
         }
     }
 }
 
-fn schema() -> String { "dawl.diagram/v1".into() }
-fn theme() -> String { "midnight".into() }
+fn schema() -> String {
+    "dawl.diagram/v1".into()
+}
+fn theme() -> String {
+    "midnight".into()
+}

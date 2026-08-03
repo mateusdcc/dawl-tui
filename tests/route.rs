@@ -4,42 +4,41 @@ use dawl_tui::model::Point;
 use dawl_tui::parser::parse;
 use dawl_tui::route::route_diagram;
 
-#[test]
-fn routes_around_node_interiors_with_orthogonal_segments() {
-    let source = r#"
-    diagram routed "Routed"
-    viewport 60x20
-    node a "A" at 2,7 size 9x3
-    node obstacle "Obstacle" at 20,5 size 12x7
-    node b "B" at 45,7 size 9x3
-    edge ab a -> b
-    "#;
+fn route_source(source: &str) -> (dawl_tui::layout::Layout, Vec<dawl_tui::route::RoutedEdge>) {
     let diagram = parse(source).unwrap();
     let layout = layout_diagram(&diagram, &LayoutOptions::default()).unwrap();
     let routes = route_diagram(&diagram, &layout).unwrap();
+    (layout, routes)
+}
+
+#[test]
+fn routes_around_node_interiors_with_orthogonal_segments() {
+    let source = "diagram routed \"Routed\"\nviewport 60x20\nnode a \"A\" at 2,7 size 9x3\nnode obstacle \"Obstacle\" at 20,5 size 12x7\nnode b \"B\" at 45,7 size 9x3\nedge ab a -> b\n";
+    let (layout, routes) = route_source(source);
     let route = &routes[0];
-    assert!(route.points.windows(2).all(|pair| orthogonal(pair[0], pair[1])));
+    assert!(route
+        .points
+        .windows(2)
+        .all(|pair| orthogonal(pair[0], pair[1])));
     assert_eq!(route.points.first().copied(), Some(Point { x: 10, y: 8 }));
     assert_eq!(route.points.last().copied(), Some(Point { x: 45, y: 8 }));
-    assert!(route.points.iter().all(|point| !inside(layout.nodes["obstacle"], *point)));
+    assert!(route
+        .points
+        .iter()
+        .all(|p| !inside(layout.nodes["obstacle"], *p)));
 }
 
 #[test]
 fn honors_explicit_ports_and_route_points() {
-    let source = r#"
-    diagram hinted "Hinted"
-    viewport 50x16
-    node a "A" at 5,2 size 9x3
-    node b "B" at 30,2 size 9x3
-    edge ab a -> b from_port south to_port south via 9,9 34,9
-    "#;
-    let diagram = parse(source).unwrap();
-    let layout = layout_diagram(&diagram, &Default::default()).unwrap();
-    let routes = route_diagram(&diagram, &layout).unwrap();
-    assert_eq!(routes[0].points, vec![
-        Point { x: 9, y: 4 }, Point { x: 9, y: 9 },
-        Point { x: 34, y: 9 }, Point { x: 34, y: 4 },
-    ]);
+    let source = "diagram hinted \"Hinted\"\nviewport 50x16\nnode a \"A\" at 5,2 size 9x3\nnode b \"B\" at 30,2 size 9x3\nedge ab a -> b from_port south to_port south via 9,9 34,9\n";
+    let (_, routes) = route_source(source);
+    let expected = vec![
+        Point { x: 9, y: 4 },
+        Point { x: 9, y: 9 },
+        Point { x: 34, y: 9 },
+        Point { x: 34, y: 4 },
+    ];
+    assert_eq!(routes[0].points, expected);
 }
 
 #[test]

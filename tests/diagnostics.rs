@@ -14,6 +14,7 @@ fn impossible_route_names_the_edge_and_recovery_action() {
     "#;
     let diagram = parse(source).unwrap();
     let layout = layout_diagram(&diagram, &Default::default()).unwrap();
+    println!("LAYOUT NODES: {:?}", layout.nodes);
     let error = route_diagram(&diagram, &layout).unwrap_err();
     assert_eq!(error.code, "ROUTE_NOT_FOUND");
     assert!(error.to_string().contains("important"));

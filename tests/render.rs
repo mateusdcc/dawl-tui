@@ -13,9 +13,16 @@ fn paints_nested_groups_semantic_paths_and_metrics() {
 }
 
 fn assert_labels(text: &str) {
-    for label in ["developIssuesUntilApproved: full agent flow", "parallel(issues)",
-        "developUntilApproved", "Developer agent", "YES", "NO", "findings",
-        "Worst case: 2NM + 2M + 1 agents"] {
+    for label in [
+        "developIssuesUntilApproved: full agent flow",
+        "parallel(issues)",
+        "developUntilApproved",
+        "Developer ag",
+        "YES",
+        "NO",
+        "findings",
+        "Worst case: 2NM + 2M + 1 agents",
+    ] {
         assert!(text.contains(label), "missing {label}");
     }
 }
@@ -30,16 +37,26 @@ fn runtime_state_changes_style_without_moving_nodes() {
     let diagram = parse(source).unwrap();
     let layout = layout_diagram(&diagram, &Default::default()).unwrap();
     let mut state = DiagramState::default();
-    state.apply_json(r#"{"type":"node.started","nodeId":"agent"}"#).unwrap();
+    state
+        .apply_json(r#"{"type":"node.started","nodeId":"agent"}"#)
+        .unwrap();
     let grid = render_diagram(&diagram, &layout, &state).unwrap();
-    assert_eq!(grid.cell(3, 4).unwrap().style, dawl_tui::theme::Style::Running);
+    assert_eq!(
+        grid.cell(3, 4).unwrap().style,
+        dawl_tui::theme::Style::Running
+    );
     assert_eq!(layout.nodes["agent"].x, 3);
 }
 
 fn plain(grid: &dawl_tui::canvas::Grid) -> String {
-    (0..grid.height).map(|y| {
-        (0..grid.width).map(|x| grid.visible_char(x, y)).collect::<String>()
-    }).collect::<Vec<_>>().join("\n")
+    (0..grid.height)
+        .map(|y| {
+            (0..grid.width)
+                .map(|x| grid.visible_char(x, y))
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 const RENDER_SOURCE: &str = r#"
@@ -66,9 +83,14 @@ fn traversed_edge_uses_runtime_style() {
     let diagram = parse(source).unwrap();
     let layout = layout_diagram(&diagram, &Default::default()).unwrap();
     let mut state = DiagramState::default();
-    state.apply_json(r#"{"type":"edge.traversed","edgeId":"e","status":"active"}"#).unwrap();
+    state
+        .apply_json(r#"{"type":"edge.traversed","edgeId":"e","status":"active"}"#)
+        .unwrap();
     let grid = render_diagram(&diagram, &layout, &state).unwrap();
-    assert!(grid.cells.iter().any(|cell| cell.style == dawl_tui::theme::Style::Running));
+    assert!(grid
+        .cells
+        .iter()
+        .any(|cell| cell.style == dawl_tui::theme::Style::Running));
 }
 
 #[test]

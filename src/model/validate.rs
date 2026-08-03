@@ -16,13 +16,22 @@ impl Diagram {
     }
 
     fn validate_schema(&self) -> Result<()> {
-        if self.schema == "dawl.diagram/v1" { return Ok(()); }
-        Err(Error::input("MODEL_SCHEMA", format!("unsupported schema {}", self.schema)))
+        if self.schema == "dawl.diagram/v1" {
+            return Ok(());
+        }
+        Err(Error::input(
+            "MODEL_SCHEMA",
+            format!("unsupported schema {}", self.schema),
+        ))
     }
 
     fn validate_groups(&self, groups: &HashSet<&str>) -> Result<()> {
         for group in &self.groups {
-            if group.parent.as_deref().is_some_and(|id| !groups.contains(id)) {
+            if group
+                .parent
+                .as_deref()
+                .is_some_and(|id| !groups.contains(id))
+            {
                 return Err(Error::input("MODEL_UNKNOWN_GROUP", group.id.clone()));
             }
         }
@@ -30,7 +39,9 @@ impl Diagram {
     }
 
     fn validate_group_cycles(&self) -> Result<()> {
-        for group in &self.groups { self.validate_group_chain(&group.id)?; }
+        for group in &self.groups {
+            self.validate_group_chain(&group.id)?;
+        }
         Ok(())
     }
 
@@ -38,8 +49,14 @@ impl Diagram {
         let mut seen = HashSet::new();
         let mut current = Some(start);
         while let Some(id) = current {
-            if !seen.insert(id) { return Err(Error::input("MODEL_GROUP_CYCLE", start)); }
-            current = self.groups.iter().find(|group| group.id == id).and_then(|group| group.parent.as_deref());
+            if !seen.insert(id) {
+                return Err(Error::input("MODEL_GROUP_CYCLE", start));
+            }
+            current = self
+                .groups
+                .iter()
+                .find(|group| group.id == id)
+                .and_then(|group| group.parent.as_deref());
         }
         Ok(())
     }
@@ -67,7 +84,10 @@ fn unique<'a>(values: impl Iterator<Item = &'a str>, kind: &str) -> Result<HashS
     let mut seen = HashSet::new();
     for value in values {
         if !seen.insert(value) {
-            return Err(Error::input("MODEL_DUPLICATE_ID", format!("duplicate {kind} id {value}")));
+            return Err(Error::input(
+                "MODEL_DUPLICATE_ID",
+                format!("duplicate {kind} id {value}"),
+            ));
         }
     }
     Ok(seen)

@@ -40,7 +40,12 @@ impl Error {
     }
 
     fn new(code: &'static str, message: impl Into<String>, kind: ErrorKind) -> Self {
-        Self { code, message: message.into(), hint: None, kind }
+        Self {
+            code,
+            message: message.into(),
+            hint: None,
+            kind,
+        }
     }
 }
 

@@ -24,26 +24,51 @@ pub(super) struct Pathfinder<'a> {
 
 impl<'a> Pathfinder<'a> {
     pub(super) fn new(size: Size, blocked: &'a HashSet<Point>, used: &'a HashSet<Point>) -> Self {
-        Self { size, blocked, used }
+        Self {
+            size,
+            blocked,
+            used,
+        }
     }
 
     pub(super) fn find(&self, start: Point, end: Point) -> Option<Vec<Point>> {
-        let initial = State { point: start, axis: 0 };
+        let initial = State {
+            point: start,
+            axis: 0,
+        };
         let mut queue = BinaryHeap::from([Candidate::new(initial, 0, end)]);
         let mut costs = HashMap::from([(initial, 0)]);
         let mut parents = HashMap::new();
         while let Some(candidate) = queue.pop() {
-            if candidate.state.point == end { return rebuild(candidate.state, initial, &parents); }
+            if candidate.state.point == end {
+                return rebuild(candidate.state, initial, &parents);
+            }
             self.visit(candidate, end, &mut queue, &mut costs, &mut parents);
         }
         None
     }
 
-    fn visit(&self, current: Candidate, end: Point, queue: &mut BinaryHeap<Candidate>, costs: &mut HashMap<State, u32>, parents: &mut HashMap<State, State>) {
-        if costs.get(&current.state).is_some_and(|cost| current.cost > *cost) { return; }
+    fn visit(
+        &self,
+        current: Candidate,
+        end: Point,
+        queue: &mut BinaryHeap<Candidate>,
+        costs: &mut HashMap<State, u32>,
+        parents: &mut HashMap<State, State>,
+    ) {
+        if costs
+            .get(&current.state)
+            .is_some_and(|cost| current.cost > *cost)
+        {
+            return;
+        }
         for next in self.neighbors(current.state, end) {
-            let cost = current.cost.saturating_add(self.step_cost(current.state, next));
-            if costs.get(&next).is_some_and(|known| *known <= cost) { continue; }
+            let cost = current
+                .cost
+                .saturating_add(self.step_cost(current.state, next));
+            if costs.get(&next).is_some_and(|known| *known <= cost) {
+                continue;
+            }
             costs.insert(next, cost);
             parents.insert(next, current.state);
             queue.push(Candidate::new(next, cost, end));
@@ -51,16 +76,28 @@ impl<'a> Pathfinder<'a> {
     }
 
     fn neighbors(&self, state: State, end: Point) -> Vec<State> {
-        moves(state.point).into_iter().filter_map(|(point, axis)| {
-            if !self.in_bounds(point) || (point != end && self.blocked.contains(&point)) { return None; }
-            Some(State { point, axis })
-        }).collect()
+        moves(state.point)
+            .into_iter()
+            .filter_map(|(point, axis)| {
+                if !self.in_bounds(point) || (point != end && self.blocked.contains(&point)) {
+                    return None;
+                }
+                Some(State { point, axis })
+            })
+            .collect()
     }
 
     fn step_cost(&self, from: State, to: State) -> u32 {
-        let bend = if from.axis != 0 && from.axis != to.axis { 6 } else { 0 };
+        let bend = if from.axis != 0 && from.axis != to.axis {
+            6
+        } else {
+            0
+        };
         let overlap = if self.used.contains(&to.point) { 12 } else { 0 };
-        let proximity = adjacent(to.point).iter().filter(|point| self.blocked.contains(point)).count() as u32;
+        let proximity = adjacent(to.point)
+            .iter()
+            .filter(|point| self.blocked.contains(point))
+            .count() as u32;
         1 + bend + overlap + proximity
     }
 
@@ -71,13 +108,19 @@ impl<'a> Pathfinder<'a> {
 
 impl Candidate {
     fn new(state: State, cost: u32, end: Point) -> Self {
-        Self { estimate: cost.saturating_add(manhattan(state.point, end)), cost, state }
+        Self {
+            estimate: cost.saturating_add(manhattan(state.point, end)),
+            cost,
+            state,
+        }
     }
 }
 
 impl Ord for Candidate {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.estimate.cmp(&self.estimate)
+        other
+            .estimate
+            .cmp(&self.estimate)
             .then_with(|| other.cost.cmp(&self.cost))
             .then_with(|| other.state.point.y.cmp(&self.state.point.y))
             .then_with(|| other.state.point.x.cmp(&self.state.point.x))
@@ -86,10 +129,16 @@ impl Ord for Candidate {
 }
 
 impl PartialOrd for Candidate {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
-fn rebuild(mut current: State, start: State, parents: &HashMap<State, State>) -> Option<Vec<Point>> {
+fn rebuild(
+    mut current: State,
+    start: State,
+    parents: &HashMap<State, State>,
+) -> Option<Vec<Point>> {
     let mut points = vec![current.point];
     while current != start {
         current = *parents.get(&current)?;
@@ -99,13 +148,17 @@ fn rebuild(mut current: State, start: State, parents: &HashMap<State, State>) ->
     Some(points)
 }
 
-fn moves(point: Point) -> [(Point, u8); 4] {
+fn moves(p: Point) -> [(Point, u8); 4] {
     [
-        (Point { x: point.x.saturating_add(1), y: point.y }, 1),
-        (Point { x: point.x.saturating_sub(1), y: point.y }, 1),
-        (Point { x: point.x, y: point.y.saturating_add(1) }, 2),
-        (Point { x: point.x, y: point.y.saturating_sub(1) }, 2),
+        (pt(p.x.saturating_add(1), p.y), 1),
+        (pt(p.x.saturating_sub(1), p.y), 1),
+        (pt(p.x, p.y.saturating_add(1)), 2),
+        (pt(p.x, p.y.saturating_sub(1)), 2),
     ]
+}
+
+fn pt(x: u16, y: u16) -> Point {
+    Point { x, y }
 }
 
 fn adjacent(point: Point) -> [Point; 4] {

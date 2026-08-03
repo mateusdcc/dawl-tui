@@ -12,11 +12,16 @@ pub fn view(path: &Path) -> Result<()> {
 pub fn watch(graph: PathBuf, events: PathBuf, headless: bool) -> Result<()> {
     let diagram = dawl_tui::load_diagram(&graph)?;
     let source = std::fs::read_to_string(events)?;
-    if source.trim().is_empty() { return Err(Error::input("EVENT_EMPTY", "event stream is empty")); }
+    if source.trim().is_empty() {
+        return Err(Error::input("EVENT_EMPTY", "event stream is empty"));
+    }
     let state = apply_events(&source, &diagram)?;
     let layout = dawl_tui::layout_diagram(&diagram, &Default::default())?;
     let grid = dawl_tui::render_diagram(&diagram, &layout, &state)?;
-    if headless { print!("{}", dawl_tui::export::text(&grid)); return Ok(()); }
+    if headless {
+        print!("{}", dawl_tui::export::text(&grid));
+        return Ok(());
+    }
     super::tui::show(&grid, &diagram.title)
 }
 

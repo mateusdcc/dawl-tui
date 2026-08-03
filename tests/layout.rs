@@ -34,7 +34,8 @@ fn explicit_layout_is_deterministic() {
 
 #[test]
 fn place_constraint_enforces_terminal_separation() {
-    let graph = parse("diagram p \"Place\"\nnode a \"A\"\nnode b \"B\"\nplace a before b\n").unwrap();
+    let graph =
+        parse("diagram p \"Place\"\nnode a \"A\"\nnode b \"B\"\nplace a before b\n").unwrap();
     let layout = layout_diagram(&graph, &Default::default()).unwrap();
     assert!(layout.nodes["a"].right().saturating_add(4) <= layout.nodes["b"].x);
 }
@@ -65,12 +66,16 @@ fn moving_a_group_preserves_child_offsets() {
     let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
     let group = layout.groups["one"];
     assert!(group.right().saturating_add(4) <= layout.nodes["b"].x);
-    assert!(group.contains(dawl_tui::model::Point { x: layout.nodes["a"].x, y: layout.nodes["a"].y }));
+    assert!(group.contains(dawl_tui::model::Point {
+        x: layout.nodes["a"].x,
+        y: layout.nodes["a"].y
+    }));
 }
 
 #[test]
 fn forward_cycle_requires_an_explicit_back_edge() {
-    let source = "diagram cycle \"Cycle\"\nnode a \"A\"\nnode b \"B\"\nedge ab a -> b\nedge ba b -> a\n";
+    let source =
+        "diagram cycle \"Cycle\"\nnode a \"A\"\nnode b \"B\"\nedge ab a -> b\nedge ba b -> a\n";
     let error = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap_err();
     assert_eq!(error.code, "LAYOUT_CYCLE");
 }

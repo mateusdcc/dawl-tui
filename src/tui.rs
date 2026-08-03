@@ -25,14 +25,22 @@ fn run(terminal: &mut ratatui::DefaultTerminal, grid: &Grid, title: &str) -> Res
     let mut state = ViewState::default();
     loop {
         draw(terminal, grid, title, &state)?;
-        if read_key(&mut state)? { return Ok(()); }
+        if read_key(&mut state)? {
+            return Ok(());
+        }
     }
 }
 
-fn draw(terminal: &mut ratatui::DefaultTerminal, grid: &Grid, title: &str, state: &ViewState) -> Result<()> {
+fn draw(
+    terminal: &mut ratatui::DefaultTerminal,
+    grid: &Grid,
+    title: &str,
+    state: &ViewState,
+) -> Result<()> {
     let content = grid_text(grid);
     terminal.draw(|frame| {
-        let widget = Paragraph::new(content).scroll((state.y, state.x))
+        let widget = Paragraph::new(content)
+            .scroll((state.y, state.x))
             .block(Block::bordered().title(format!(" {title} · arrows pan · q quits ")));
         frame.render_widget(widget, frame.area());
     })?;
@@ -40,9 +48,15 @@ fn draw(terminal: &mut ratatui::DefaultTerminal, grid: &Grid, title: &str, state
 }
 
 fn read_key(state: &mut ViewState) -> Result<bool> {
-    if !event::poll(Duration::from_millis(100))? { return Ok(false); }
-    let Event::Key(key) = event::read()? else { return Ok(false); };
-    if key.kind != KeyEventKind::Press { return Ok(false); }
+    if !event::poll(Duration::from_millis(100))? {
+        return Ok(false);
+    }
+    let Event::Key(key) = event::read()? else {
+        return Ok(false);
+    };
+    if key.kind != KeyEventKind::Press {
+        return Ok(false);
+    }
     Ok(handle_key(state, key.code))
 }
 
@@ -60,14 +74,20 @@ fn handle_key(state: &mut ViewState, key: KeyCode) -> bool {
 }
 
 fn grid_text(grid: &Grid) -> Text<'static> {
-    Text::from((0..grid.height).map(|y| grid_line(grid, y)).collect::<Vec<_>>())
+    Text::from(
+        (0..grid.height)
+            .map(|y| grid_line(grid, y))
+            .collect::<Vec<_>>(),
+    )
 }
 
 fn grid_line(grid: &Grid, y: u16) -> Line<'static> {
     let mut spans = Vec::new();
     let mut x = 0;
     while x < grid.width {
-        let Some(cell) = grid.cell(x, y) else { break; };
+        let Some(cell) = grid.cell(x, y) else {
+            break;
+        };
         let semantic = cell.style;
         let mut run = String::new();
         while x < grid.width && grid.cell(x, y).is_some_and(|item| item.style == semantic) {
@@ -80,13 +100,19 @@ fn grid_line(grid: &Grid, y: u16) -> Line<'static> {
 }
 
 fn append_cell(run: &mut String, grid: &Grid, x: u16, y: u16) {
-    let Some(cell) = grid.cell(x, y) else { return; };
-    if !cell.continuation { run.push(grid.visible_char(x, y)); }
+    let Some(cell) = grid.cell(x, y) else {
+        return;
+    };
+    if !cell.continuation {
+        run.push(grid.visible_char(x, y));
+    }
 }
 
 fn terminal_style(semantic: SemanticStyle) -> Style {
     let palette = Palette::midnight();
-    Style::default().fg(color(palette.foreground(semantic))).bg(color(palette.background()))
+    Style::default()
+        .fg(color(palette.foreground(semantic)))
+        .bg(color(palette.background()))
 }
 
 fn color(value: dawl_tui::theme::Rgb) -> Color {
