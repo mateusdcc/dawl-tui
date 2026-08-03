@@ -12,6 +12,7 @@ Deterministic compound workflow diagrams for the terminal, written in Rust.
 - Deterministic layered placement with median sweeps for crossing reduction.
 - Hard `align` and `place` constraints for nodes and complete groups.
 - Orthogonal A* routing with bend, overlap, and obstacle-proximity costs.
+- Directional track occupancy, repeated vector arrowheads, and true diamond decisions.
 - Explicit ports and `via` points when exact routing is required.
 - Semantic truecolor themes for agents, reviewers, decisions, phases, outcomes, and runtime state.
 - Plain text, ANSI, SVG, interactive viewport, and finite event-stream replay.
@@ -36,13 +37,15 @@ cargo build --release
 
 ### 1. Multi-Agent Approval Flow
 
-Real output rendered from `examples/approval.dtui` (`180 × 52` scene):
+Real output rendered from `examples/approval.dtui` (`202 × 72` scene):
 
 ![Approval Flow Diagram Output](docs/assets/approval.png)
 
 ```bash
-dawl-tui render examples/approval.dtui --format ansi --width 180 --height 52
+dawl-tui render examples/approval.dtui --format ansi --width 202 --height 72
 ```
+
+The SVG reference uses exact grid-aligned strokes, centered monospace labels, true decision diamonds, and periodic arrowheads on long routes so direction remains visible throughout the flow.
 
 ### 2. CI/CD Deployment Pipeline
 
@@ -99,8 +102,8 @@ place developer before reviewer
 Automatic placement is the default. Exact layouts can progressively add authority without changing semantic IDs:
 
 ```dtui
-node developer "Developer agent" at 45,9 size 15x4 kind agent in loop
-edge retry failed -> developer kind back from_port west to_port south via 67,14 67,16 52,16 52,13
+node developer "Developer agent" at 46,9 size 15x5 kind agent in loop
+edge retry failed -> developer kind back from_port west to_port south via 76,16 76,20 53,20 53,13
 ```
 
 Supported placement relations are `before`, `after`, `above`, and `below`. Alignment is `horizontal` or `vertical`. Ports are `north`, `east`, `south`, and `west`.

@@ -3,6 +3,8 @@ use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use crate::model::{Point, Size};
 
+use super::tracks::TrackGrid;
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 struct State {
     point: Point,
@@ -19,15 +21,15 @@ struct Candidate {
 pub(super) struct Pathfinder<'a> {
     size: Size,
     blocked: &'a HashSet<Point>,
-    used: &'a HashSet<Point>,
+    tracks: &'a TrackGrid,
 }
 
 impl<'a> Pathfinder<'a> {
-    pub(super) fn new(size: Size, blocked: &'a HashSet<Point>, used: &'a HashSet<Point>) -> Self {
+    pub(super) fn new(size: Size, blocked: &'a HashSet<Point>, tracks: &'a TrackGrid) -> Self {
         Self {
             size,
             blocked,
-            used,
+            tracks,
         }
     }
 
@@ -93,12 +95,14 @@ impl<'a> Pathfinder<'a> {
         } else {
             0
         };
-        let overlap = if self.used.contains(&to.point) { 12 } else { 0 };
+        let overlap = self.tracks.overlap_cost(from.point, to.point);
+        let clearance = self.tracks.parallel_clearance_cost(from.point, to.point);
+        let crossing = self.tracks.crossing_cost(to.point, to.axis);
         let proximity = adjacent(to.point)
             .iter()
             .filter(|point| self.blocked.contains(point))
             .count() as u32;
-        1 + bend + overlap + proximity
+        1 + bend + overlap + clearance + crossing + proximity
     }
 
     fn in_bounds(&self, point: Point) -> bool {

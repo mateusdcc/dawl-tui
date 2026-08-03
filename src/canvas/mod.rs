@@ -1,9 +1,14 @@
+mod path;
 mod rect;
+mod shape;
 
 use unicode_width::UnicodeWidthChar;
 
-use self::rect::{ordered, resolve, EAST, NORTH, SOUTH, WEST};
-pub use self::rect::{Cell, Rect};
+use self::path::{direction_masks, step_toward};
+use self::rect::resolve;
+pub use self::rect::{ArrowDirection, Cell, LineLayer, Rect};
+pub(crate) use self::rect::{DIAGONAL_FALLING, DIAGONAL_RISING, EAST, NORTH, SOUTH, WEST};
+pub(crate) use self::shape::Diagonal;
 use crate::model::Point;
 use crate::theme::Style;
 
@@ -12,6 +17,7 @@ pub struct Grid {
     pub width: u16,
     pub height: u16,
     pub cells: Vec<Cell>,
+    pub(crate) diagonals: Vec<Diagonal>,
 }
 
 impl Grid {
@@ -21,6 +27,7 @@ impl Grid {
             width,
             height,
             cells: vec![Cell::default(); len],
+            diagonals: Vec::new(),
         }
     }
 
@@ -45,6 +52,8 @@ impl Grid {
                 glyph,
                 style,
                 line: 0,
+                line_layer: LineLayer::None,
+                arrow: ArrowDirection::None,
                 continuation: false,
             };
         }
@@ -55,10 +64,10 @@ impl Grid {
             return;
         }
         self.draw_box_edges(rect, style, dashed);
-        self.add_line(rect.x, rect.y, EAST | SOUTH, style);
-        self.add_line(rect.right(), rect.y, WEST | SOUTH, style);
-        self.add_line(rect.x, rect.bottom(), EAST | NORTH, style);
-        self.add_line(rect.right(), rect.bottom(), WEST | NORTH, style);
+        self.add_structure_line(rect.x, rect.y, EAST | SOUTH, style);
+        self.add_structure_line(rect.right(), rect.y, WEST | SOUTH, style);
+        self.add_structure_line(rect.x, rect.bottom(), EAST | NORTH, style);
+        self.add_structure_line(rect.right(), rect.bottom(), WEST | NORTH, style);
     }
 
     fn draw_box_edges(&mut self, rect: Rect, style: Style, dashed: bool) {
@@ -82,8 +91,21 @@ impl Grid {
         }
     }
 
-    pub fn arrow(&mut self, point: Point, style: Style) {
-        self.put(point, '▶', style);
+    pub fn draw_diamond(&mut self, rect: Rect, style: Style) {
+        let lines = shape::diamond(rect, style);
+        for line in lines {
+            for (point, mask) in shape::raster_cells(line) {
+                self.add_structure_line(point.x, point.y, mask, style);
+            }
+            self.diagonals.push(line);
+        }
+    }
+
+    pub fn arrow(&mut self, point: Point, direction: ArrowDirection, style: Style) {
+        if let Some(cell) = self.cell_mut(point.x, point.y) {
+            cell.arrow = direction;
+            cell.style = style;
+        }
     }
 
     fn write_glyph(&mut self, x: u16, y: u16, glyph: char, style: Style) -> u16 {
@@ -104,6 +126,8 @@ impl Grid {
                 glyph: ' ',
                 style,
                 line: 0,
+                line_layer: LineLayer::None,
+                arrow: ArrowDirection::None,
                 continuation: true,
             };
         }
@@ -112,7 +136,7 @@ impl Grid {
     fn draw_horizontal(&mut self, start: u16, end: u16, y: u16, style: Style, dashed: bool) {
         for x in start..=end {
             if !dashed || x % 2 == start % 2 {
-                self.add_line(x, y, EAST | WEST, style);
+                self.add_structure_line(x, y, EAST | WEST, style);
             }
         }
     }
@@ -120,38 +144,45 @@ impl Grid {
     fn draw_vertical(&mut self, start: u16, end: u16, x: u16, style: Style, dashed: bool) {
         for y in start..=end {
             if !dashed || y % 2 == start % 2 {
-                self.add_line(x, y, NORTH | SOUTH, style);
+                self.add_structure_line(x, y, NORTH | SOUTH, style);
             }
         }
     }
 
     fn segment(&mut self, from: Point, to: Point, style: Style) {
-        if from.x == to.x {
-            self.vertical_segment(from, to, style);
-        }
-        if from.y == to.y {
-            self.horizontal_segment(from, to, style);
-        }
-    }
-
-    fn horizontal_segment(&mut self, from: Point, to: Point, style: Style) {
-        let (start, end) = ordered(from.x, to.x);
-        for x in start..=end {
-            self.add_line(x, from.y, EAST | WEST, style);
+        let mut current = from;
+        while current != to {
+            let next = step_toward(current, to);
+            self.connect(current, next, style);
+            current = next;
         }
     }
 
-    fn vertical_segment(&mut self, from: Point, to: Point, style: Style) {
-        let (start, end) = ordered(from.y, to.y);
-        for y in start..=end {
-            self.add_line(from.x, y, NORTH | SOUTH, style);
-        }
+    fn connect(&mut self, from: Point, to: Point, style: Style) {
+        let (outbound, inbound) = direction_masks(from, to);
+        self.add_route_line(from.x, from.y, outbound, style);
+        self.add_route_line(to.x, to.y, inbound, style);
     }
 
-    fn add_line(&mut self, x: u16, y: u16, mask: u8, style: Style) {
+    fn add_structure_line(&mut self, x: u16, y: u16, mask: u8, style: Style) {
         if let Some(cell) = self.cell_mut(x, y) {
             cell.line |= mask;
             cell.style = style;
+            if cell.line_layer == LineLayer::None {
+                cell.line_layer = LineLayer::Structure;
+            }
+        }
+    }
+
+    fn add_route_line(&mut self, x: u16, y: u16, mask: u8, style: Style) {
+        if let Some(cell) = self.cell_mut(x, y) {
+            if cell.line_layer == LineLayer::Structure {
+                cell.line = mask;
+            } else {
+                cell.line |= mask;
+            }
+            cell.style = style;
+            cell.line_layer = LineLayer::Route;
         }
     }
 
