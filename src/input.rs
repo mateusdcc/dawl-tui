@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::path::Path;
 
 use serde_json::Value;
@@ -6,10 +7,23 @@ use crate::error::{Error, Result};
 use crate::model::Diagram;
 
 pub fn load_diagram(path: &Path) -> Result<Diagram> {
-    let source = std::fs::read_to_string(path)?;
+    let source = read_source(path)?;
     let diagram = parse_source(path, &source)?;
     diagram.validate()?;
     Ok(diagram)
+}
+
+fn read_source(path: &Path) -> Result<String> {
+    if path == Path::new("-") {
+        return read_stdin();
+    }
+    Ok(std::fs::read_to_string(path)?)
+}
+
+fn read_stdin() -> Result<String> {
+    let mut source = String::new();
+    std::io::stdin().read_to_string(&mut source)?;
+    Ok(source)
 }
 
 pub fn parse_source(path: &Path, source: &str) -> Result<Diagram> {
