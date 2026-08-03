@@ -669,52 +669,50 @@ git add benches fixtures docs Cargo.toml crates/dawl-tui-core/Cargo.toml
  git commit -m "docs: add research protocol and pipeline benchmarks"
 ```
 
-### Task 14: README, CI, Bootstrap, and Final Verification
+### Task 14: README, CI, and Final Verification
 
 **Files:**
 - Create: `README.md`
 - Create: `LICENSE`
 - Create: `.github/workflows/ci.yml`
-- Create: `SETUP.sh`
 - Modify: `.gitignore`
 
 **Interfaces:**
-- Produces: release-ready archive with full Git history and executable bootstrap.
+- Produces: release-ready archive with full Git history, documented commands, and cross-platform verification.
 
 - [ ] **Step 1: Write README usage**
 
-Include installation, native syntax, DAWL JSON/NDJSON pipelines, render/view/watch/check commands, reference example, interaction keys, architecture, tests, benchmarks, and limitations. Document `cargo run --example` or CLI example commands and `cargo bench`.
+Include installation, native syntax, DAWL JSON/NDJSON pipelines, render/view/watch/check commands, reference example, interaction keys, architecture, tests, benchmarks, and limitations.
 
 - [ ] **Step 2: Add CI**
 
-Run `cargo xtask verify` on Linux, macOS, and Windows; run snapshot and E2E tests on Linux; cache Cargo registry and target directories.
+Run source-policy checks, `cargo check`, Clippy with warnings denied, and tests on Linux, macOS, and Windows. Run the benchmark smoke test on Linux.
 
-- [ ] **Step 3: Add ignored executable bootstrap**
-
-The script checks Rust and GitHub CLI, runs verification/examples/benchmarks, initializes Git identity when absent, creates `mateusdcc/dawl-tui` if needed, configures `origin`, and pushes `main` plus tags. Add `/SETUP.sh` to `.gitignore`; do not reference the filename in documentation.
-
-- [ ] **Step 4: Run full verification**
+- [ ] **Step 3: Run full verification**
 
 Run:
 
 ```bash
-cargo xtask verify
-cargo run -p dawl-tui-cli -- render examples/approval.dtui --format text --width 180 --height 52
-cargo run -p dawl-tui-cli -- render examples/approval.dtui --format svg --output target/approval.svg
-cargo bench --bench pipeline -- --sample-size 10
+python3 -m unittest scripts/test_quality.py
+python3 scripts/quality.py
+cargo check --all-targets
+cargo clippy --all-targets -- -D warnings
+cargo test --all-targets
+cargo run -- render examples/approval.dtui --format text --width 180 --height 52
+cargo run -- render examples/approval.dtui --format svg --output artifacts/approval.svg
+cargo bench --bench pipeline
 ```
 
 Expected: all commands succeed; generated diagram has no overlaps or clipped required labels.
 
-- [ ] **Step 5: Inspect repository policy and history**
+- [ ] **Step 4: Inspect repository policy and history**
 
 Run: `git status --short && git log --oneline --decorate`
-Expected: clean worktree and one focused commit per task.
+Expected: clean worktree and focused commits.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add README.md LICENSE .github .gitignore
-git add -f SETUP.sh
-git commit -m "docs: finalize release workflow and usage"
+git add README.md LICENSE .github .gitignore docs
+ git commit -m "docs: finalize release workflow and usage"
 ```

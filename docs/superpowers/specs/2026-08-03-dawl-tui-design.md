@@ -1,10 +1,10 @@
-# DAWL TUI Diagram Engine — Design
+# DAWL TUI Diagram Engine — Implemented Design
 
 ## Purpose
 
-Build a standalone Rust program that renders dense, deterministic terminal diagrams with nested groups, orthogonal connectors, semantic colors, runtime state, and layout constraints. The bundled approval-workflow example must reproduce the composition and visual hierarchy of the supplied reference image at a documented terminal size.
+`dawl-tui` is a standalone Rust renderer for dense, deterministic terminal diagrams. It accepts a compact line-oriented notation or DAWL-compatible JSON, lowers both to one canonical compound-graph model, and emits plain text, ANSI, SVG, or an interactive terminal viewport.
 
-The renderer accepts both a human-authored diagram language and DAWL-compatible graph/event streams. Both inputs lower to one canonical intermediate representation before layout.
+The reference approval workflow is an explicit `180 × 52` composition. Normal diagrams can omit coordinates and rely on deterministic automatic placement; exact compositions progressively add positions, sizes, ports, alignment, placement, and route waypoints without changing semantic IDs.
 
 ## Product Boundary
 
@@ -12,204 +12,174 @@ Repository: `mateusdcc/dawl-tui`.
 
 The project owns:
 
-- diagram syntax and parser;
-- canonical graph/layout IR;
-- DAWL JSON and NDJSON adapters;
-- deterministic hierarchical layout;
-- orthogonal edge routing;
-- terminal-cell canvas and ANSI styling;
-- interactive viewport and runtime-state updates;
-- SVG/text snapshot export for verification;
-- benchmarks, examples, and quality gates.
+- native diagram parsing and diagnostics;
+- canonical nodes, edges, groups, constraints, and semantic kinds;
+- normalization of DAWL graph JSON and finite NDJSON runtime events;
+- deterministic layered placement and compound-group bounds;
+- orthogonal routing with explicit-route escape hatches;
+- Unicode-aware terminal-cell painting;
+- text, ANSI, SVG, and interactive viewport output;
+- acceptance tests, source-policy checks, examples, benchmarks, and research documentation.
 
-It does not parse or execute DAWL source. DAWL remains responsible for workflow semantics and emits the canonical graph/event protocol.
+It does not parse or execute DAWL source. DAWL remains responsible for workflow semantics and supplies its compiled graph and event records.
 
 ## Research Basis
 
-The architecture combines results from several domains:
+The implementation combines established results from several domains:
 
-1. **Layered directed-graph drawing.** Sugiyama, Tagawa, and Toda separate hierarchy drawing into layer ordering and coordinate assignment. Gansner et al. refine this into cycle removal, rank assignment, crossing reduction, coordinate assignment, and edge construction. This becomes the main layout pipeline.
-2. **Compound graphs.** Sander's compound directed-graph layout motivates globally ranked nodes inside nested rectangular groups rather than laying out each group independently.
-3. **Orthogonal/VLSI routing.** Tamassia's topology–shape–metrics separation and Lee's grid routing motivate a routing stage independent from node placement, with explicit penalties for bends, crossings, occupied cells, and semantic back-edges.
-4. **Constraint-based layout.** Dwyer, Koren, and Marriott show how separation/alignment constraints can coexist with automatic layout. The DSL therefore supports optional rank, order, alignment, port, size, and route-hint constraints.
-5. **Human graph comprehension.** Purchase et al. and Ware et al. support prioritizing crossings, path continuity, bends, and symmetry rather than optimizing a single geometric metric.
-6. **Dynamic diagrams.** Incremental graph-layout research shows a trade-off between stability and static quality. Runtime events do not relayout by default; stable IDs preserve node positions and only styles change. Structural changes may request an explicit incremental or full layout.
-7. **Visual-language usability.** Cognitive Dimensions motivates low viscosity and useful secondary notation. Semantic defaults remove boilerplate while explicit constraints remain available for exact compositions.
+1. **Layered graph drawing.** Sugiyama, Tagawa, and Toda motivate rank assignment and within-rank ordering. Gansner et al. motivate the staged directed-graph pipeline and deterministic coordinate assignment.
+2. **Compound graphs.** Sander motivates global placement across nested rectangular groups instead of independently drawing each group.
+3. **Orthogonal and VLSI routing.** Tamassia separates topology, shape, and metrics; Lee motivates grid search around obstacles. The renderer therefore routes after placement.
+4. **Constraint-based layout.** Dwyer, Koren, and Marriott motivate optional separation and alignment constraints layered over automatic placement.
+5. **Graph comprehension.** Purchase, Ware, and later mental-map studies motivate prioritizing crossings, path continuity, bends, and spatial stability.
+6. **Visual-language usability.** Cognitive Dimensions motivates semantic defaults, stable symbolic IDs, and optional secondary notation for editorial control.
 
-Primary references and DOIs are listed in `docs/research.md`.
+Primary references and implementation consequences are recorded in `docs/research.md`.
 
-## Input Model
+## Inputs
 
-### Native syntax
+### Native notation
 
-The native `.dtui` language is declarative and automatic by default:
+A declaration occupies one line. Coordinates and sizes are optional:
 
 ```dtui
-diagram developIssuesUntilApproved "developIssuesUntilApproved: full agent flow" {
-  viewport 180x52
-  direction right
-  theme midnight
+diagram approval "Approval flow"
+viewport 120x40
+direction right
+theme midnight
 
-  group issues "parallel(\"issues\")" {
-    layout stack
-    group issue65 "issue-65" { use approval(issue = 65) }
-    group issue66 "issue-66" { use approval(issue = 66) }
-    group issueN  "issue-N"  { use approval(issue = N) }
-  }
+group loop "iteration 1…M" kind repeat dashed
+node developer "Developer agent" kind agent in loop
+node reviewer "Reviewer agent" kind reviewer in loop
+decision pass "pass?" in loop
+node failed "failed review" kind failure in loop
 
-  input -> phase_issues -> issues -> issue_results -> phase_merge
-  phase_merge -> merge -> cleanup -> phase_summary -> summary -> output
+edge review developer -> reviewer
+edge decide reviewer -> pass
+edge no pass -> failed kind failure label "NO"
+edge retry failed -> developer kind back label "findings"
 
-  align issue65 issue66 issueN vertical
-  place issues before phase_merge
-  route rejected below pass
-}
+align horizontal developer reviewer pass
+place developer before reviewer
 ```
 
-Reusable templates define repeated structures. Nodes, groups, edges, and constraints have stable symbolic IDs. Labels are separate from IDs.
+Exact authority can be added locally:
 
-### DAWL protocol
+```dtui
+node developer "Developer agent" at 45,9 size 15x4 kind agent in loop
+edge retry failed -> developer kind back from_port west to_port south via 67,14 67,16 52,16 52,13
+```
 
-The canonical JSON graph uses versioned records:
+### DAWL graph protocol
+
+The adapter accepts the current DAWL graph shape and the versioned envelope:
 
 ```json
 {
   "schema": "dawl.diagram/v1",
-  "title": "developIssuesUntilApproved: full agent flow",
-  "nodes": [{"id":"flow.issues.developer","label":"Developer agent","kind":"agent","group":"issue-65"}],
-  "edges": [{"id":"e1","from":"a","to":"b","kind":"success","label":"YES"}],
-  "groups": [{"id":"issue-65","label":"issue-65","kind":"lane","parent":"issues"}],
-  "constraints": []
+  "title": "Approval flow",
+  "nodes": [{"id":"developer","label":"Developer","kind":"agent","groupId":"loop"}],
+  "edges": [{"id":"review","from":"developer","to":"reviewer","kind":"forward"}],
+  "groups": [{"id":"loop","label":"iteration 1…M","kind":"repeat","parentId":"issues"}]
 }
 ```
 
-Runtime updates are NDJSON records with stable graph IDs:
+Missing optional envelope fields receive deterministic defaults. Camel-case `groupId` and `parentId` normalize to the internal `group` and `parent` fields. Current DAWL kinds including `fork`, `join`, `value`, `return`, and `function` are accepted.
 
-```json
-{"schema":"dawl.event/v1","type":"node.started","node_id":"flow.issues.developer"}
-```
-
-Unknown additive fields are ignored. Unknown schema major versions fail with an actionable diagnostic.
+Runtime updates are finite NDJSON records. Supported records include `node.started`, `node.completed`, `node.succeeded`, `node.failed`, `condition.evaluated`, `retry.scheduled`, and `edge.traversed`. Events update semantic style only and never relayout the graph.
 
 ## Architecture
 
-The crate is split into focused modules, each below 200 lines:
+The library keeps each responsibility in a focused module:
 
-- `syntax`: lexer, parser, source spans, diagnostics;
-- `model`: canonical graph, constraints, semantic kinds, validation;
-- `adapter`: DAWL JSON/NDJSON conversion;
-- `layout`: cycle policy, ranks, lane ordering, coordinate assignment, groups;
-- `route`: ports, occupancy grid, A* orthogonal routing, edge bundling;
-- `canvas`: Unicode-aware terminal cells and box/line junction resolution;
-- `theme`: semantic palette and style inheritance;
-- `render`: graph-to-canvas painting and clipping;
-- `app`: Ratatui event loop, panning, zoom levels, resize, watch mode;
-- `export`: plain text, ANSI, and SVG snapshots;
-- `cli`: commands and error presentation.
+- `parser`: line-oriented syntax and source diagnostics;
+- `input`: native/JSON detection, standard-input support, and DAWL normalization;
+- `model`: canonical types, semantic kinds, and validation;
+- `layout`: explicit placement, deterministic layered placement, constraints, and group bounds;
+- `route`: ports, occupancy, orthogonal A* search, back-edge routing, and waypoint handling;
+- `state`: runtime-event projection and fuzzy DAWL ID matching;
+- `canvas`: Unicode cell storage, boxes, paths, and junction resolution;
+- `theme`: semantic truecolor palette;
+- `render`: groups, edges, nodes, labels, title, and text panels;
+- `export`: plain text, ANSI, and SVG;
+- `tui`: Ratatui viewport and terminal restoration;
+- `cli` and `interactive`: command dispatch and finite event replay.
 
-The library API remains independent from Ratatui. Batch rendering and tests use the same `Scene` and `Canvas` as the interactive application.
+Batch output and the TUI use the same layout, routes, semantic state, and terminal-cell grid.
 
-## Layout Pipeline
+## Layout and Routing
 
-1. Validate identifiers, references, group ancestry, and constraint satisfiability.
-2. Collapse nested groups into a compound hierarchy and compute node extents from Unicode display width.
-3. Assign flow ranks using a deterministic longest-path/network-simplex-inspired solver with fixed tie-breaking.
-4. Expand long edges with virtual routing vertices.
-5. Order ranks using deterministic median/barycenter sweeps plus local transpositions.
-6. Apply hard ordering/alignment constraints; score soft constraints.
-7. Assign integer terminal-cell coordinates using separation constraints.
-8. Compute group bounds bottom-up with title, border, and padding reservations.
-9. Choose node ports and route edges over an occupancy grid with A*.
-10. Improve routes locally by reducing crossings, bends, detours, and label collisions.
-11. Paint groups, edges, nodes, labels, title, and optional metrics strip.
+The implemented pipeline is:
 
-The objective is lexicographic, not a fragile weighted sum:
+1. Validate unique IDs, references, group ancestry, constraints, and group cycles.
+2. Preserve all explicitly positioned nodes.
+3. Rank unpositioned nodes with a deterministic longest-path pass.
+4. Order ranks with deterministic median sweeps and stable ID tie-breaking.
+5. Assign integer terminal-cell coordinates from measured Unicode label width.
+6. Infer nested group bounds bottom-up.
+7. Apply hard `align` and `place` constraints to nodes or entire groups.
+8. Refresh inferred group bounds after movement.
+9. Select edge ports and route orthogonally over node-interior obstacles.
+10. Use explicit ports and `via` points as authoritative route control.
+11. Paint into a clipped terminal-cell canvas.
 
-1. satisfy hard constraints;
-2. avoid node/group intersections;
-3. minimize edge crossings;
-4. preserve path continuity;
-5. minimize bends;
-6. minimize edge length;
-7. minimize area;
-8. preserve previous positions when requested.
-
-This ordering reflects both empirical readability findings and the needs of dense terminal diagrams.
-
-## Routing
-
-Edges are routed after placement on a cell grid. Obstacles include node interiors, group title cells, and reserved padding. Border crossings are allowed only through calculated gates.
-
-A* state includes cell position and incoming direction. Its cost includes:
-
-- one unit per cell;
-- bend penalty;
-- crossing penalty;
-- overlap penalty;
-- proximity penalty near labels and borders;
-- preferred-lane bonus;
-- strong direction penalty for back-edges unless explicitly routed otherwise.
-
-Edges may share a trunk when compatible, but diverging semantic edges retain individually colored terminal segments. Junction glyphs are resolved from a four-direction connectivity mask.
+Automatic layout is intentionally deterministic rather than globally optimal. Explicit coordinates and waypoints are the exact-composition mechanism.
 
 ## Rendering Fidelity
 
-The reference example ships as `examples/approval.dtui` and targets `180x52` cells. Its golden ANSI/SVG snapshots verify:
+`examples/approval.dtui` targets `180 × 52` cells and reproduces the reference composition’s structure:
 
 - dark navy background;
 - cyan compound boxes and phase nodes;
 - blue developer and purple reviewer nodes;
 - green success and red failure/retry paths;
 - three vertically stacked issue lanes;
-- separate merge approval group;
+- a distinct merge approval region;
 - cleanup and summary chain;
-- bottom agent-count metrics panel;
-- title and dense but non-overlapping labels.
+- bottom agent-count panel;
+- title and dense non-overlapping labels.
 
-Exact pixels depend on the terminal font and cell aspect ratio. The deterministic cell scene, ANSI output, and SVG reference are exact for a specified theme and cell geometry.
+Text and ANSI output are exact at the cell level. SVG uses a documented monospace cell geometry; the appearance of terminal glyphs still depends on the selected font.
 
-## Interaction
+## Commands and Interaction
 
-Commands:
+```text
+dawl-tui render INPUT [--format text|ansi|svg] [--output FILE]
+                      [--width CELLS] [--height CELLS]
+dawl-tui check INPUT
+dawl-tui view INPUT
+dawl-tui watch --graph GRAPH.json --events EVENTS.ndjson [--headless]
+```
 
-- `dawl-tui render FILE --format ansi|text|svg`;
-- `dawl-tui view FILE`;
-- `dawl-tui watch --graph GRAPH.json --events EVENTS.ndjson`;
-- `dawl-tui check FILE`;
-- `dawl-tui explain FILE` for layout diagnostics.
-
-Interactive controls: arrows/WASD pan, `+/-` change detail level, `0` fit, `/` search, `n/N` navigate matches, `g` toggle groups, `e` toggle edge labels, `q` quit. Terminal resize triggers viewport recomputation, not graph relayout.
+`render -` accepts a DAWL graph from standard input. `watch` consumes a finite event file and renders the final projected state. The interactive viewport supports arrow-key panning, `0` to reset, and `q` or Escape to exit. Resizing changes the visible viewport rather than recomputing the graph.
 
 ## Error Handling
 
-All parsing and validation failures carry a stable error code, source span or JSON pointer, concise message, and remediation hint. Layout failures produce a minimal unsatisfied-constraint set when possible. Terminal teardown uses RAII and panic hooks so raw mode and the alternate screen are restored.
+Errors carry a stable code, category, message, optional hint, and deterministic exit code:
 
-## Testing Strategy
+- `2`: native syntax, JSON, or model input error;
+- `3`: layout or route error;
+- `4`: I/O error.
 
-Development is acceptance-test-first.
+The TUI uses Ratatui terminal initialization/restoration so raw mode and the alternate screen are restored on normal exit and through the installed panic hook.
 
-- Parser tests cover valid syntax, recovery, spans, and malformed constraints.
-- Model property tests cover stable serialization and validation invariants.
-- Layout tests assert no overlap, deterministic coordinates, rank/order constraints, and stable IDs.
-- Router tests assert obstacle avoidance and endpoint connectivity.
-- Canvas tests cover Unicode width and all line-junction masks.
-- Snapshot tests compare text, ANSI-stripped cells, and SVG.
-- E2E tests launch the real CLI against `examples/approval.dtui` and compare output.
-- DAWL compatibility tests consume a fixture matching DAWL's current node/edge/group graph and runtime events.
-- Regression fixes begin with an E2E reproduction before unit-level isolation.
+## Testing and Quality Gates
 
-## Quality Gates
+The repository contains unit, integration, property-style, and real CLI tests for:
 
-`cargo xtask verify` runs formatting, Clippy with warnings denied, unit/integration/E2E tests, source-policy checks, examples, documentation tests, and release build. Source-policy checks enforce:
+- native syntax and diagnostics;
+- model references and cyclic compound groups;
+- deterministic placement and hard constraints;
+- routing connectivity and actionable failures;
+- Unicode cell width and line junctions;
+- ANSI and SVG output;
+- exact reference composition;
+- current DAWL graph normalization;
+- runtime state and traversed-edge projection;
+- standard-input rendering and command exit codes.
 
-- Rust source files at most 200 lines;
-- functions at most 20 physical lines;
-- low decision complexity;
-- no production `unwrap`, `expect`, `panic`, or `todo`;
-- module-level single-responsibility boundaries.
+A Python source-policy checker enforces every Rust file at no more than 200 lines, every function at no more than 20 physical lines, low decision complexity, and no production `unwrap`, `expect`, `panic!`, `todo!`, or `unimplemented!`. Cargo verification adds compilation, Clippy with warnings denied, and the complete test suite. The benchmark measures parse, layout, route, render, event repaint, and full-pipeline time.
 
-Criterion benchmarks measure parsing, layout, routing, rendering, and event projection at small, reference, and stress sizes. README documents benchmark and example commands.
+## Delivery State
 
-## Delivery
-
-The archive contains the complete Git repository and atomic commits. An ignored executable bootstrap script configures the GitHub remote for `mateusdcc/dawl-tui`, creates the repository when needed, verifies the toolchain, runs tests/examples/benchmarks, and pushes the commit history.
+The archive contains the complete Git repository with focused commits, documentation, CI for Linux/macOS/Windows, the reference image and composition, DAWL fixtures, tests, benchmarks, and an MIT license.
