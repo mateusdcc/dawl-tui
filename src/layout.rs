@@ -6,7 +6,7 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::canvas::Rect;
 use crate::error::{Error, Result};
-use crate::model::{Diagram, Direction, Point, Size};
+use crate::model::{Diagram, Point, Size};
 
 #[derive(Clone, Debug)]
 pub struct Layout {
