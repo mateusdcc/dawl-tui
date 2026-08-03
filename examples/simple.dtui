@@ -1,17 +1,17 @@
 diagram pipeline "CI/CD Deployment Pipeline"
-viewport 100x26
+viewport 120x32
 direction right
 theme midnight
 
-group ci "Build & Test" kind parallel at 2,3 size 40x16
-node build "Compile" kind activity in ci at 5,6 size 12x3
-node test "Unit Tests" kind activity in ci at 22,6 size 14x3
+group ci "Build & Test" kind parallel at 2,3 size 45x18
+node build "Compile" kind activity in ci at 6,7 size 14x5
+node test "Unit Tests" kind activity in ci at 26,7 size 16x5
 edge e1 build -> test
 
-group cd "Deployment" kind repeat at 46,3 size 48x16
-node staging "Staging Deploy" kind agent in cd at 49,6 size 16x3
-decision verify "Healthy?" in cd at 70,6 size 9x3
-node prod "Production" kind success at 80,14 size 14x3
+group cd "Deployment" kind repeat at 53,3 size 64x22
+node staging "Staging Deploy" kind agent in cd at 58,7 size 18x5
+decision verify "Healthy?" in cd at 83,7 size 11x5
+node prod "Production" kind success at 100,16 size 16x5
 
 edge e2 test -> staging
 edge e3 staging -> verify

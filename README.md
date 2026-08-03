@@ -49,12 +49,36 @@ The SVG reference uses exact grid-aligned strokes, centered monospace labels, tr
 
 ### 2. CI/CD Deployment Pipeline
 
-Real output rendered from `examples/simple.dtui`:
+Real output rendered from `examples/simple.dtui` (`120 × 32` scene):
 
 ![CI/CD Pipeline Diagram Output](docs/assets/simple.png)
 
 ```bash
-dawl-tui render examples/simple.dtui --format ansi --width 100 --height 26
+dawl-tui render examples/simple.dtui --format ansi --width 120 --height 32
+```
+
+### 3. Minimal review gate
+
+Create a compact decision-and-retry workflow directly in native syntax:
+
+```dtui
+diagram review "Review gate"
+viewport 60x20
+theme midnight
+
+node draft "Draft" kind activity at 3,7 size 12x5
+node review "Review" kind reviewer at 22,7 size 14x5
+decision pass "Approved?" at 43,7 size 11x5
+node revise "Revise" kind failure at 42,15 size 13x3
+
+edge submit draft -> review
+edge decide review -> pass
+edge reject pass -> revise kind failure label "NO"
+edge retry revise -> review kind back label "findings"
+```
+
+```bash
+dawl-tui render review.dtui --format svg --output review.svg
 ```
 
 ## Render diagrams
