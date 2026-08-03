@@ -59,3 +59,14 @@ const RENDER_SOURCE: &str = r#"
     edge retry failed -> developer kind back label "findings"
     text metric "Worst case: 2NM + 2M + 1 agents" at 3,24 kind metric
     "#;
+
+#[test]
+fn traversed_edge_uses_runtime_style() {
+    let source = "diagram edge \"Edge\"\nviewport 35x10\nnode a \"A\" at 2,4 size 5x3\nnode b \"B\" at 25,4 size 5x3\nedge e a -> b\n";
+    let diagram = parse(source).unwrap();
+    let layout = layout_diagram(&diagram, &Default::default()).unwrap();
+    let mut state = DiagramState::default();
+    state.apply_json(r#"{"type":"edge.traversed","edgeId":"e","status":"active"}"#).unwrap();
+    let grid = render_diagram(&diagram, &layout, &state).unwrap();
+    assert!(grid.cells.iter().any(|cell| cell.style == dawl_tui::theme::Style::Running));
+}

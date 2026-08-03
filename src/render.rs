@@ -148,7 +148,16 @@ fn kind_style(kind: NodeKind) -> Style {
     }
 }
 
-fn edge_style(kind: EdgeKind, _status: Status) -> Style {
+fn edge_style(kind: EdgeKind, status: Status) -> Style {
+    match status {
+        Status::Running => Style::Running,
+        Status::Succeeded => Style::Success,
+        Status::Failed => Style::Failure,
+        Status::Idle => edge_kind_style(kind),
+    }
+}
+
+fn edge_kind_style(kind: EdgeKind) -> Style {
     match kind { EdgeKind::Success => Style::Success, EdgeKind::Failure | EdgeKind::Back => Style::Failure, EdgeKind::Muted => Style::Muted, EdgeKind::Forward => Style::Edge }
 }
 
