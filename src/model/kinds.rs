@@ -39,7 +39,7 @@ pub enum EdgeKind {
     Forward,
 }
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupKind {
     Parallel,

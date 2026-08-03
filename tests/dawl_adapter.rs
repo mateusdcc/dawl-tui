@@ -42,3 +42,38 @@ fn accepts_all_node_and_group_kinds_emitted_by_dawl() {
     assert_eq!(graph.nodes.len(), 4);
     assert_eq!(graph.groups.len(), 1);
 }
+
+
+#[test]
+fn projects_current_dawl_condition_and_retry_events() {
+    let graph = dawl_tui::input::parse_source(Path::new("graph.json"), event_graph()).unwrap();
+    let mut state = DiagramState::default();
+    apply(&mut state, &graph, r#"{"type":"node.completed","nodeId":"flow.approval.developer"}"#);
+    apply(&mut state, &graph, r#"{"type":"condition.evaluated","nodeId":"flow.approval.pass","result":false}"#);
+    apply(&mut state, &graph, r#"{"type":"retry.scheduled","nodeId":"flow.approval.repeat"}"#);
+    assert_eq!(state.node("developer"), dawl_tui::state::Status::Succeeded);
+    assert_eq!(state.node("pass"), dawl_tui::state::Status::Failed);
+    assert_eq!(state.edge("no"), dawl_tui::state::Status::Running);
+    assert_eq!(state.edge("retry"), dawl_tui::state::Status::Running);
+}
+
+fn apply(state: &mut DiagramState, graph: &dawl_tui::Diagram, event: &str) {
+    state.apply_json_with_graph(event, graph).unwrap();
+}
+
+fn event_graph() -> &'static str {
+    r#"{
+      "title":"Events",
+      "nodes":[
+        {"id":"developer","label":"Developer","kind":"agent","groupId":"approval"},
+        {"id":"pass","label":"pass?","kind":"decision","groupId":"approval"},
+        {"id":"failed","label":"failed review","kind":"failure","groupId":"approval"}
+      ],
+      "edges":[
+        {"id":"to-pass","from":"developer","to":"pass"},
+        {"id":"no","from":"pass","to":"failed","kind":"failure"},
+        {"id":"retry","from":"failed","to":"developer","kind":"back"}
+      ],
+      "groups":[{"id":"approval","label":"repeat M fresh","kind":"repeat"}]
+    }"#
+}
