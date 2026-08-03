@@ -14,13 +14,47 @@ pub struct Cell {
     pub glyph: char,
     pub style: Style,
     pub line: u8,
+    pub line_layer: LineLayer,
+    pub arrow: ArrowDirection,
     pub continuation: bool,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum ArrowDirection {
+    #[default]
+    None,
+    North,
+    East,
+    South,
+    West,
+}
+
+impl ArrowDirection {
+    fn glyph(self) -> Option<char> {
+        match self {
+            Self::None => None,
+            Self::North => Some('▲'),
+            Self::East => Some('▶'),
+            Self::South => Some('▼'),
+            Self::West => Some('◀'),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum LineLayer {
+    #[default]
+    None,
+    Structure,
+    Route,
 }
 
 pub const NORTH: u8 = 1;
 pub const EAST: u8 = 2;
 pub const SOUTH: u8 = 4;
 pub const WEST: u8 = 8;
+pub const DIAGONAL_RISING: u8 = 16;
+pub const DIAGONAL_FALLING: u8 = 32;
 
 impl Default for Cell {
     fn default() -> Self {
@@ -28,6 +62,8 @@ impl Default for Cell {
             glyph: ' ',
             style: Style::Plain,
             line: 0,
+            line_layer: LineLayer::None,
+            arrow: ArrowDirection::None,
             continuation: false,
         }
     }
@@ -48,20 +84,28 @@ impl Rect {
     }
 }
 
-pub fn ordered(a: u16, b: u16) -> (u16, u16) {
-    if a <= b {
-        (a, b)
-    } else {
-        (b, a)
-    }
-}
-
 pub fn resolve(cell: &Cell) -> char {
     if cell.glyph != ' ' || cell.continuation {
         return cell.glyph;
     }
+    if let Some(glyph) = cell.arrow.glyph() {
+        return glyph;
+    }
+    resolve_line(cell.line)
+}
+
+fn resolve_line(line: u8) -> char {
+    let orthogonal = line & 15;
+    if orthogonal == 0 {
+        return match line & (DIAGONAL_RISING | DIAGONAL_FALLING) {
+            DIAGONAL_RISING => '╱',
+            DIAGONAL_FALLING => '╲',
+            value if value != 0 => '╳',
+            _ => ' ',
+        };
+    }
     const GLYPHS: [char; 16] = [
         ' ', '│', '─', '└', '│', '│', '┌', '├', '─', '┘', '─', '┴', '┐', '┤', '┬', '┼',
     ];
-    GLYPHS[usize::from(cell.line & 15)]
+    GLYPHS[usize::from(orthogonal)]
 }

@@ -80,9 +80,16 @@ pub fn label_anchor(points: &[Point], label: &str) -> Option<Point> {
     if label.is_empty() {
         return None;
     }
-    points
+    let horizontal = points
         .windows(2)
-        .max_by_key(|pair| distance(pair[0], pair[1]))
+        .filter(|pair| pair[0].y == pair[1].y)
+        .max_by_key(|pair| distance(pair[0], pair[1]));
+    horizontal
+        .or_else(|| {
+            points
+                .windows(2)
+                .max_by_key(|pair| distance(pair[0], pair[1]))
+        })
         .map(|pair| midpoint(pair[0], pair[1]))
 }
 
@@ -116,24 +123,6 @@ fn all_cells(rect: &Rect) -> Vec<Point> {
         }
     }
     points
-}
-
-pub fn expand(points: &[Point]) -> Vec<Point> {
-    points
-        .windows(2)
-        .flat_map(|pair| segment_points(pair[0], pair[1]))
-        .collect()
-}
-
-fn segment_points(a: Point, b: Point) -> Vec<Point> {
-    if a.x == b.x {
-        return range(a.y, b.y).map(|y| Point { x: a.x, y }).collect();
-    }
-    range(a.x, b.x).map(|x| Point { x, y: a.y }).collect()
-}
-
-fn range(a: u16, b: u16) -> std::ops::RangeInclusive<u16> {
-    a.min(b)..=a.max(b)
 }
 
 fn distance(a: Point, b: Point) -> u16 {

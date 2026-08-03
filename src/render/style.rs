@@ -4,8 +4,12 @@ use crate::theme::Style;
 
 pub fn group_style(kind: GroupKind) -> Style {
     match kind {
-        GroupKind::Panel | GroupKind::Lane => Style::Structure,
-        _ => Style::Group,
+        GroupKind::Panel => Style::Structure,
+        GroupKind::Lane => Style::Muted,
+        GroupKind::Repeat => Style::Dim,
+        GroupKind::Parallel | GroupKind::Group | GroupKind::Scope | GroupKind::Function => {
+            Style::Group
+        }
     }
 }
 
@@ -57,6 +61,7 @@ pub fn text_style(kind: TextKind) -> Style {
         TextKind::Title => Style::Title,
         TextKind::Metric => Style::Metric,
         TextKind::Dim => Style::Dim,
+        TextKind::Failure => Style::Failure,
         TextKind::Plain => Style::Plain,
     }
 }

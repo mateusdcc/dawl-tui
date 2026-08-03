@@ -74,13 +74,8 @@ fn paint_box_node(grid: &mut Grid, node: &Node, rect: Rect, style: Style) {
 }
 
 fn paint_decision(grid: &mut Grid, node: &Node, rect: Rect, style: Style) {
-    let label = format!("◇ {}", node.label);
-    let width = UnicodeWidthStr::width(label.as_str()) as u16;
-    let point = Point {
-        x: rect.x.saturating_add(rect.width.saturating_sub(width) / 2),
-        y: center_y(rect),
-    };
-    grid.write(point, &label, style);
+    grid.draw_diamond(rect, style);
+    paint_centered_lines(grid, rect, &node.label, style);
 }
 
 fn paint_centered_lines(grid: &mut Grid, rect: Rect, label: &str, style: Style) {
@@ -153,8 +148,4 @@ fn clip(value: &str, width: u16) -> String {
         used = used.saturating_add(glyph_width);
     }
     output
-}
-
-fn center_y(rect: Rect) -> u16 {
-    rect.y.saturating_add(rect.height / 2)
 }

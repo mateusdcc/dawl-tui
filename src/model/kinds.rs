@@ -58,6 +58,7 @@ pub enum TextKind {
     Title,
     Metric,
     Dim,
+    Failure,
     #[default]
     Plain,
 }

@@ -76,7 +76,7 @@ fn export(grid: &dawl_tui::canvas::Grid, format: Format) -> String {
     match format {
         Format::Text => dawl_tui::export::text(grid),
         Format::Ansi => dawl_tui::export::ansi(grid),
-        Format::Svg => dawl_tui::export::svg(grid, 9, 18),
+        Format::Svg => dawl_tui::export::svg(grid, 6, 10),
     }
 }
 
