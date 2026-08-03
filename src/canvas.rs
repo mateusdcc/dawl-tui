@@ -72,10 +72,23 @@ impl Grid {
 
     pub fn draw_box(&mut self, rect: Rect, style: Style, dashed: bool) {
         if rect.width < 2 || rect.height < 2 { return; }
-        self.draw_horizontal(rect.x, rect.right(), rect.y, style, dashed);
-        self.draw_horizontal(rect.x, rect.right(), rect.bottom(), style, dashed);
-        self.draw_vertical(rect.y, rect.bottom(), rect.x, style, dashed);
-        self.draw_vertical(rect.y, rect.bottom(), rect.right(), style, dashed);
+        self.draw_box_edges(rect, style, dashed);
+        self.add_line(rect.x, rect.y, EAST | SOUTH, style);
+        self.add_line(rect.right(), rect.y, WEST | SOUTH, style);
+        self.add_line(rect.x, rect.bottom(), EAST | NORTH, style);
+        self.add_line(rect.right(), rect.bottom(), WEST | NORTH, style);
+    }
+
+
+    fn draw_box_edges(&mut self, rect: Rect, style: Style, dashed: bool) {
+        let left = rect.x.saturating_add(1);
+        let right = rect.right().saturating_sub(1);
+        let top = rect.y.saturating_add(1);
+        let bottom = rect.bottom().saturating_sub(1);
+        if left <= right { self.draw_horizontal(left, right, rect.y, style, dashed); }
+        if left <= right { self.draw_horizontal(left, right, rect.bottom(), style, dashed); }
+        if top <= bottom { self.draw_vertical(top, bottom, rect.x, style, dashed); }
+        if top <= bottom { self.draw_vertical(top, bottom, rect.right(), style, dashed); }
     }
 
     pub fn draw_path(&mut self, points: &[Point], style: Style) {
