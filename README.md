@@ -1,10 +1,58 @@
 # dawl-tui
 
+[![CI](https://github.com/mateusdcc/dawl-tui/actions/workflows/ci.yml/badge.svg)](https://github.com/mateusdcc/dawl-tui/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/dawl-tui.svg)](https://crates.io/crates/dawl-tui)
+[![docs.rs](https://img.shields.io/docsrs/dawl-tui)](https://docs.rs/dawl-tui)
+[![license](https://img.shields.io/crates/l/dawl-tui.svg)](https://github.com/mateusdcc/dawl-tui/blob/main/LICENSE)
+
 Deterministic compound workflow diagrams for the terminal, written in Rust.
 
-![Approval Workflow Diagram](docs/assets/approval.png)
+![Approval Workflow Diagram](https://raw.githubusercontent.com/mateusdcc/dawl-tui/main/docs/assets/approval.png)
 
 `dawl-tui` turns either a compact native notation or a DAWL graph into a dense Unicode/ANSI diagram. It combines automatic layered placement with explicit constraints, ports, and route points, so ordinary graphs need little layout syntax while reference-grade compositions remain reproducible cell for cell.
+
+Use it for agent workflows, approval loops, CI/CD pipelines, and other graphs
+that need to render consistently in terminals, logs, documentation, and SVG.
+
+## Install
+
+Rust 1.88 or newer is required.
+
+```bash
+cargo install dawl-tui --locked
+dawl-tui --version
+```
+
+To install the latest development version instead:
+
+```bash
+cargo install --git https://github.com/mateusdcc/dawl-tui --locked
+```
+
+## Quick start
+
+Render a complete workflow from standard input:
+
+```bash
+dawl-tui render - --format ansi <<'DTUI'
+diagram release "Release gate"
+viewport 72x18
+direction right
+theme midnight
+
+node build "Build" kind activity
+node test "Test" kind reviewer
+decision ready "Ship?"
+node deploy "Deploy" kind success
+
+edge verify build -> test
+edge decide test -> ready
+edge ship ready -> deploy kind success label "YES"
+DTUI
+```
+
+Use `--format text` for plain logs or `--format svg --output graph.svg` for
+documentation. Run `dawl-tui --help` for the complete command list.
 
 ## Capabilities
 
@@ -18,28 +66,13 @@ Deterministic compound workflow diagrams for the terminal, written in Rust.
 - Plain text, ANSI, SVG, interactive viewport, and finite event-stream replay.
 - Direct compatibility with DAWL's current `{ title, nodes, edges, groups }` graph and NDJSON runtime events.
 
-## Install
-
-Rust 1.88 or newer is required.
-
-```bash
-cargo install --path .
-```
-
-For development:
-
-```bash
-cargo build --release
-./target/release/dawl-tui --help
-```
-
 ## Examples
 
 ### 1. Multi-Agent Approval Flow
 
 Real output rendered from `examples/approval.dtui` (`202 × 72` scene):
 
-![Approval Flow Diagram Output](docs/assets/approval.png)
+![Approval Flow Diagram Output](https://raw.githubusercontent.com/mateusdcc/dawl-tui/main/docs/assets/approval.png)
 
 ```bash
 dawl-tui render examples/approval.dtui --format ansi --width 202 --height 72
@@ -51,7 +84,7 @@ The SVG reference uses exact grid-aligned strokes, centered monospace labels, tr
 
 Real output rendered from `examples/simple.dtui` (`120 × 32` scene):
 
-![CI/CD Pipeline Diagram Output](docs/assets/simple.png)
+![CI/CD Pipeline Diagram Output](https://raw.githubusercontent.com/mateusdcc/dawl-tui/main/docs/assets/simple.png)
 
 ```bash
 dawl-tui render examples/simple.dtui --format ansi --width 120 --height 32
@@ -164,7 +197,8 @@ dawl-tui watch \
 
 Recognized runtime events include `node.started`, `node.completed`, `node.succeeded`, `node.failed`, `condition.evaluated`, `retry.scheduled`, and `edge.traversed`. Stable and fuzzy DAWL IDs are projected onto the graph without relayout, preserving spatial orientation.
 
-The versioned protocol is specified in [`docs/protocol.md`](docs/protocol.md).
+The versioned protocol is specified in
+[`docs/protocol.md`](https://github.com/mateusdcc/dawl-tui/blob/main/docs/protocol.md).
 
 ## Commands
 
@@ -200,11 +234,9 @@ Runtime events update only `DiagramState`. Layout coordinates and routes remain 
 ## Verification
 
 ```bash
-python3 -m unittest scripts/test_quality.py
-python3 scripts/quality.py
-cargo check --all-targets
-cargo clippy --all-targets -- -D warnings
-cargo test --all-targets
+make verify
+RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features
+cargo package --locked
 ```
 
 The source policy checks every Rust file for the requested limits: at most 200 lines per file, at most 20 physical lines per function, low decision complexity, and no production `unwrap`, `expect`, `panic!`, `todo!`, or `unimplemented!`.
@@ -223,7 +255,9 @@ The benchmark reports parse, layout, route, render, event repaint, and complete 
 
 The design draws from layered graph layout, compound graph drawing, constrained layout, VLSI maze routing, orthogonal bend minimization, graph-comprehension experiments, dynamic mental-map research, and Cognitive Dimensions. The algorithms are deterministic approximations adapted to integer terminal cells; they do not claim globally optimal drawings.
 
-The primary references, DOIs, implementation consequences, and limitations are documented in [`docs/research.md`](docs/research.md).
+The primary references, DOIs, implementation consequences, and limitations are
+documented in
+[`docs/research.md`](https://github.com/mateusdcc/dawl-tui/blob/main/docs/research.md).
 
 ## Current limitations
 
@@ -234,4 +268,14 @@ The primary references, DOIs, implementation consequences, and limitations are d
 
 ## License
 
-MIT.
+MIT. See [LICENSE](https://github.com/mateusdcc/dawl-tui/blob/main/LICENSE).
+
+## Contributing and security
+
+Contributions are welcome; see
+[CONTRIBUTING.md](https://github.com/mateusdcc/dawl-tui/blob/main/CONTRIBUTING.md).
+For vulnerabilities, follow the private reporting instructions in
+[SECURITY.md](https://github.com/mateusdcc/dawl-tui/blob/main/SECURITY.md).
+
+Release history is maintained in
+[CHANGELOG.md](https://github.com/mateusdcc/dawl-tui/blob/main/CHANGELOG.md).

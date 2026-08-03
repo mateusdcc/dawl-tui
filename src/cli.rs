@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use dawl_tui::error::Result;
 
 #[derive(Parser)]
-#[command(name = "dawl-tui", version, about)]
+#[command(name = "dawl-tui", version, about, propagate_version = true)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -12,31 +12,49 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Render a native .dtui or DAWL JSON diagram
     Render(RenderArgs),
-    Check { input: PathBuf },
-    View { input: PathBuf },
+    /// Parse and validate a diagram without rendering it
+    Check {
+        /// Input path, or - to read from standard input
+        input: PathBuf,
+    },
+    /// Open an interactive, pannable terminal viewport
+    View {
+        /// Input path, or - to read from standard input
+        input: PathBuf,
+    },
+    /// Replay DAWL runtime events over a graph
     Watch(WatchArgs),
 }
 
 #[derive(clap::Args)]
 struct RenderArgs {
+    /// Input path, or - to read from standard input
     input: PathBuf,
+    /// Output format
     #[arg(long, value_enum, default_value_t = Format::Ansi)]
     format: Format,
+    /// Write output to a file instead of standard output
     #[arg(long)]
     output: Option<PathBuf>,
+    /// Override the diagram viewport width in terminal cells
     #[arg(long)]
     width: Option<u16>,
+    /// Override the diagram viewport height in terminal cells
     #[arg(long)]
     height: Option<u16>,
 }
 
 #[derive(clap::Args)]
 struct WatchArgs {
+    /// DAWL graph JSON file
     #[arg(long)]
     graph: PathBuf,
+    /// Finite NDJSON runtime event stream
     #[arg(long)]
     events: PathBuf,
+    /// Print the final frame instead of opening the TUI
     #[arg(long)]
     headless: bool,
 }

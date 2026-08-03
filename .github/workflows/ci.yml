@@ -23,7 +23,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: 1.88.0
-          components: clippy
+          components: clippy, rustfmt
+      - name: Check formatting
+        run: cargo fmt --all -- --check
       - name: Test source-policy checker
         run: python -m unittest scripts/test_quality.py
       - name: Enforce source policy
@@ -34,6 +36,25 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: Test
         run: cargo test --all-targets
+
+  release-artifact:
+    name: Verify release artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.88.0
+      - name: Build documentation with warnings denied
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --no-deps --all-features
+      - name: Package the crate
+        run: cargo package --locked
+      - name: Install the packaged crate
+        run: cargo install --path target/package/dawl-tui-0.1.0 --locked --root target/install
+      - name: Smoke test the installed binary
+        run: target/install/bin/dawl-tui --version
 
   benchmark:
     name: Benchmark smoke test

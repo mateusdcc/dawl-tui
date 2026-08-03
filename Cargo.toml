@@ -4,10 +4,26 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 description = "Deterministic compound workflow diagrams for the terminal"
+authors = ["Mateus Cavalcanti"]
 license = "MIT"
 repository = "https://github.com/mateusdcc/dawl-tui"
+homepage = "https://github.com/mateusdcc/dawl-tui"
+documentation = "https://docs.rs/dawl-tui"
+readme = "README.md"
 keywords = ["tui", "diagram", "workflow", "graph", "dawl"]
 categories = ["command-line-utilities", "visualization"]
+include = [
+    "/src/**",
+    "/benches/**",
+    "/examples/**",
+    "/fixtures/**",
+    "/tests/**",
+    "/Cargo.lock",
+    "/Cargo.toml",
+    "/CHANGELOG.md",
+    "/LICENSE",
+    "/README.md",
+]
 
 [lib]
 name = "dawl_tui"
