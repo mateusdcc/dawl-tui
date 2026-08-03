@@ -6,7 +6,7 @@
 
 **Architecture:** All inputs lower to a versioned canonical `Diagram` model. A deterministic pipeline validates, measures, ranks, orders, places, routes, and paints the graph into a terminal-cell `Scene`; batch and interactive frontends consume the same scene. The first release prioritizes the supplied approval-workflow composition and stable extensibility over general graph-layout optimality.
 
-**Tech Stack:** Rust 1.85+, Cargo workspace, clap, serde/serde_json, pest, unicode-width, ratatui, crossterm, thiserror, indexmap, criterion, insta, proptest, assert_cmd, predicates, tempfile, syn/proc-macro2 for source-policy checks.
+**Tech Stack:** Rust 1.88+, Cargo workspace, clap, serde/serde_json, pest, unicode-width, ratatui, crossterm, thiserror, indexmap, criterion, insta, proptest, assert_cmd, predicates, tempfile, syn/proc-macro2 for source-policy checks.
 
 ## Global Constraints
 

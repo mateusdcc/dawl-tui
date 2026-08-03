@@ -19,7 +19,7 @@ Deterministic compound workflow diagrams for the terminal, written in Rust.
 
 ## Install
 
-Rust 1.85 or newer is required.
+Rust 1.88 or newer is required.
 
 ```bash
 cargo install --path .
