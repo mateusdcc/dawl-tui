@@ -20,3 +20,25 @@ fn applies_camel_and_snake_case_events() {
     assert_eq!(state.node("developer"), dawl_tui::state::Status::Succeeded);
     assert_eq!(state.edge("e2"), dawl_tui::state::Status::Succeeded);
 }
+
+#[test]
+fn accepts_all_node_and_group_kinds_emitted_by_dawl() {
+    let source = r#"{
+      "title":"Current DAWL kinds",
+      "nodes":[
+        {"id":"fork","label":"parallel","kind":"fork"},
+        {"id":"value","label":"value","kind":"value"},
+        {"id":"ret","label":"return result","kind":"return"},
+        {"id":"join","label":"results","kind":"join"}
+      ],
+      "edges":[
+        {"id":"e1","from":"fork","to":"value"},
+        {"id":"e2","from":"value","to":"ret"},
+        {"id":"e3","from":"ret","to":"join"}
+      ],
+      "groups":[{"id":"fn","label":"approve","kind":"function"}]
+    }"#;
+    let graph = dawl_tui::input::parse_source(Path::new("graph.json"), source).unwrap();
+    assert_eq!(graph.nodes.len(), 4);
+    assert_eq!(graph.groups.len(), 1);
+}

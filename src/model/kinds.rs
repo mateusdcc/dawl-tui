@@ -21,6 +21,9 @@ pub enum NodeKind {
     Failure,
     Shell,
     Join,
+    Fork,
+    Return,
+    Value,
     #[default]
     Activity,
 }
@@ -43,6 +46,7 @@ pub enum GroupKind {
     Lane,
     Repeat,
     Scope,
+    Function,
     Panel,
     #[default]
     Group,

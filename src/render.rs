@@ -142,8 +142,9 @@ fn kind_style(kind: NodeKind) -> Style {
         NodeKind::Decision => Style::Decision, NodeKind::Phase => Style::Phase,
         NodeKind::Input => Style::Input, NodeKind::Output => Style::Output,
         NodeKind::Success => Style::Success, NodeKind::Failure => Style::Failure,
-        NodeKind::Shell => Style::Shell, NodeKind::Join => Style::Join,
-        NodeKind::Activity => Style::Plain,
+        NodeKind::Shell => Style::Shell,
+        NodeKind::Join | NodeKind::Fork => Style::Join,
+        NodeKind::Return | NodeKind::Value | NodeKind::Activity => Style::Plain,
     }
 }
 
