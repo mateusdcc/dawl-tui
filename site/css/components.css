@@ -1,0 +1,95 @@
+/* Navigation, Badges, Buttons, Cards, Inputs */
+.nav-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px dashed var(--text-dim);
+  padding: 12px 0;
+  margin-bottom: 20px;
+}
+
+.brand-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--text-bright);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px var(--text-main);
+}
+
+.nav-links {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+}
+
+.nav-btn {
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover, .nav-btn.active {
+  background: var(--text-main);
+  color: var(--bg-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  border: 1px solid var(--text-dim);
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+
+.badge-cyan { border-color: var(--text-cyan); color: var(--text-cyan); }
+.badge-amber { border-color: var(--text-amber); color: var(--text-amber); }
+.badge-green { border-color: var(--text-main); color: var(--text-main); }
+
+.retro-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-bright);
+  border: 1px solid var(--text-dim);
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.retro-btn:hover {
+  background: var(--text-dim);
+  color: var(--bg-primary);
+}
+
+.search-input {
+  background: var(--bg-terminal);
+  border: 1px solid var(--text-dim);
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.search-input:focus {
+  outline: 1px solid var(--text-main);
+  box-shadow: var(--shadow-glow);
+}
+
+.status-bar {
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  padding: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}

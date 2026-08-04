@@ -1,0 +1,42 @@
+/* Y2K UNIX Terminal Color Palette & CSS Variables */
+:root {
+  --bg-primary: #0a0d0f;
+  --bg-secondary: #10161a;
+  --bg-tertiary: #162026;
+  --bg-terminal: #05080a;
+  --border-color: #00ff6633;
+  --border-glow: #00ff6688;
+  
+  --text-main: #00ff66;
+  --text-dim: #00aa44;
+  --text-bright: #33ff88;
+  --text-cyan: #00f3ff;
+  --text-amber: #ffb000;
+  --text-magenta: #ff007f;
+  --text-muted: #4a6b5d;
+
+  --font-mono: "VT323", "Share Tech Mono", "Courier New", monospace;
+  --font-body: "Share Tech Mono", "Courier New", monospace;
+
+  --crt-scanline: rgba(18, 16, 16, 0.3);
+  --glass-bg: rgba(10, 13, 15, 0.85);
+  --shadow-glow: 0 0 15px rgba(0, 255, 102, 0.25);
+}
+
+.theme-amber {
+  --text-main: #ffb000;
+  --text-dim: #cc8800;
+  --text-bright: #ffc43d;
+  --border-color: #ffb00033;
+  --border-glow: #ffb00088;
+  --shadow-glow: 0 0 15px rgba(255, 176, 0, 0.25);
+}
+
+.theme-cyan {
+  --text-main: #00f3ff;
+  --text-dim: #00a3cc;
+  --text-bright: #59f7ff;
+  --border-color: #00f3ff33;
+  --border-glow: #00f3ff88;
+  --shadow-glow: 0 0 15px rgba(0, 243, 255, 0.25);
+}

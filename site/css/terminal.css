@@ -1,0 +1,91 @@
+/* Y2K UNIX Terminal Window & CLI Chrome */
+.terminal-window {
+  background: var(--bg-terminal);
+  border: 2px solid var(--text-dim);
+  box-shadow: var(--shadow-glow);
+  margin-bottom: 20px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.terminal-header {
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.terminal-title {
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: var(--text-bright);
+}
+
+.terminal-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-ctrl {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-close { background: #ff5f56; }
+.btn-min { background: #ffbd2e; }
+.btn-max { background: #27c93f; }
+
+.terminal-body {
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  min-height: 200px;
+}
+
+.cmd-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cmd-prompt {
+  color: var(--text-bright);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.cmd-input {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  outline: none;
+  width: 100%;
+}
+
+.terminal-output {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: var(--text-main);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
