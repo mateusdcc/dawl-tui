@@ -1,0 +1,70 @@
+diagram diamondGraph "Diamond graph: parallel specialists, one synthesis"
+viewport 202x72
+theme midnight
+direction right
+
+text subtitle "The orchestrator defines bounded contracts; isolated agents return artifacts that a high-tier synthesizer reconciles" at 32,2 kind dim
+
+node input "INPUT\n\ncomplex goal\nconstraints\nsuccess criteria" at 1,26 size 19x9 kind input
+
+group orchestration "orchestration" at 23,6 size 31x54 kind group
+node orchestrator "Orchestrator\n\ndecompose goal\nset contracts\nchoose model tier" at 27,11 size 23x10 kind agent in orchestration
+node contracts "TASK CONTRACTS\ninput • scope\noutput schema\ndone condition" at 28,25 size 21x8 kind activity in orchestration
+node dispatch "Dispatch" at 34,39 size 10x5 kind fork in orchestration
+text isolation "No shared history between workers" at 25,50 kind dim
+
+group workers "parallel isolated context windows" at 58,5 size 82x55 kind parallel
+
+group researchLane "research contract · low-cost model" at 60,7 size 78x15 kind lane in workers
+node research "Research agent\nsearch sources\nvalidate facts" at 63,11 size 20x7 kind agent in researchLane
+node researchTask "TASKS\nAPIs • constraints\nprior art • citations" at 87,11 size 24x7 kind activity in researchLane
+node evidence "EVIDENCE PACK\nsource links\nknown unknowns" at 115,11 size 20x7 kind output in researchLane
+
+group architectureLane "architecture contract · high-tier model" at 60,23 size 78x15 kind lane in workers
+node architect "Architecture agent\nreason over tradeoffs\nresolve constraints" at 63,27 size 20x7 kind agent in architectureLane
+node architectureTask "TASKS\nboundaries • data flow\nfailure modes • cost" at 87,27 size 24x7 kind activity in architectureLane
+node design "DESIGN ARTIFACT\ncomponents\ndecision record" at 115,27 size 20x7 kind output in architectureLane
+
+group testingLane "test contract · low-cost model" at 60,39 size 78x15 kind lane in workers
+node tester "Test-design agent\nchallenge plan\nfind edge cases" at 63,43 size 20x7 kind agent in testingLane
+node testingTask "TASKS\ninvariants • fixtures\nnegative paths • oracles" at 87,43 size 24x7 kind activity in testingLane
+node testPlan "TEST PLAN\ncases + expected\nevidence" at 115,43 size 20x7 kind output in testingLane
+
+node bundle "Context pack\nall 3 artifacts\nsource-linked" at 145,26 size 18x9 kind join
+node synthesizer "Synthesis agent\nhigh-tier model\nresolve conflicts\nproduce final plan" at 166,23 size 21x11 kind reviewer
+decision complete "Complete?" at 171,39 size 15x7
+node output "OUTPUT\n\nfinal plan\nrisks\n+ tests" at 188,39 size 13x9 kind output
+
+edge receive input -> orchestrator from_port east to_port west
+edge define orchestrator -> contracts from_port south to_port north
+edge dispatch_contracts contracts -> dispatch from_port south to_port north
+edge to_research dispatch -> research from_port north to_port west via 39,14
+edge to_architecture dispatch -> architect from_port east to_port west via 56,41 56,30
+edge to_testing dispatch -> tester from_port south to_port west via 39,46
+edge research_work research -> researchTask from_port east to_port west
+edge research_output researchTask -> evidence from_port east to_port west
+edge architecture_work architect -> architectureTask from_port east to_port west
+edge architecture_output architectureTask -> design from_port east to_port west
+edge testing_work tester -> testingTask from_port east to_port west
+edge testing_output testingTask -> testPlan from_port east to_port west
+edge collect_evidence evidence -> bundle from_port east to_port north via 154,14
+edge collect_design design -> bundle from_port east to_port west
+edge collect_tests testPlan -> bundle from_port east to_port south via 154,47
+edge synthesize bundle -> synthesizer from_port east to_port west
+edge assess synthesizer -> complete from_port south to_port north
+edge ship complete -> output kind success label "YES" from_port east to_port west
+edge retry complete -> dispatch kind back label "missing evidence" from_port south to_port south via 178,58 39,58 39,44
+
+group metrics "" at 1,64 size 200x7 kind panel
+text agentsTitle "Graph cost and behavior" at 89,64 kind title
+text icon1 "♙♙♙" at 5,67 kind metric
+text metric1 "Workers: 3 in parallel\nwith bounded contracts" at 14,66 kind plain
+text separator1 "│\n│\n│\n│\n│" at 51,65 kind dim
+text icon2 "▣" at 55,67 kind metric
+text metric2 "Contexts: isolated\nartifacts cross edges" at 61,66 kind plain
+text separator2 "│\n│\n│\n│\n│" at 101,65 kind dim
+text icon3 "$" at 105,67 kind metric
+text metric3 "Tiering: cheap scouts\nhigh-tier synthesis" at 111,66 kind plain
+text separator3 "│\n│\n│\n│\n│" at 151,65 kind dim
+text icon4 "⌛" at 155,67 kind metric
+text metric4 "Critical path: slowest branch\n+ synthesis, not sum of all" at 161,66 kind plain

@@ -1,0 +1,70 @@
+diagram verificationOrchestrator "Verification orchestration: chained skills and clean context"
+viewport 202x72
+theme midnight
+direction right
+
+text subtitle "An orchestrator selects specialized checks, assigns model tiers, waits at a barrier, and returns unified findings to the worker" at 29,2 kind dim
+
+node feature "INPUT\n\nfinalized feature\nacceptance contract\nrisk profile" at 1,26 size 19x10 kind input
+
+group policyGroup "verification policy" at 23,6 size 33x54 kind group
+node policy "RULE SET\nrequired checks\nseverity threshold\nevidence schema" at 27,11 size 25x9 kind activity in policyGroup
+node orchestrator "Orchestrator agent\n\nselect skills\nassign model tier\nset stop conditions" at 27,24 size 25x10 kind agent in policyGroup
+node dispatch "Run checks" at 34,41 size 12x5 kind fork in policyGroup
+text policyNote "Only artifacts and verdicts cross contexts" at 24,52 kind dim
+
+group skills "parallel verification skills" at 60,5 size 84x55 kind parallel
+
+group embeddedLane "embedded skill · low-cost model" at 62,7 size 80x15 kind lane in skills
+node embedded "Embedded runner\nfast + deterministic" at 65,11 size 23x7 kind activity in embeddedLane
+node embeddedWork "RUN\nbuild • lint • unit tests\nheadless UI screenshots" at 89,11 size 26x7 kind shell in embeddedLane
+node embeddedReport "EVIDENCE\nexit codes • logs\nimage diffs" at 119,11 size 19x7 kind output in embeddedLane
+
+group deepLane "deep-pass skill · high-tier model" at 62,23 size 80x15 kind lane in skills
+node deep "Contextual reviewer\nhigh-tier reasoning" at 65,27 size 23x7 kind reviewer in deepLane
+node deepWork "REVIEW\ncorrectness • security\nnuance • false positives" at 89,27 size 26x7 kind activity in deepLane
+node deepReport "FINDINGS\nseverity • file\nrationale + fix" at 119,27 size 19x7 kind output in deepLane
+
+group opinionLane "second-opinion skill · clean high-tier session" at 62,39 size 80x15 kind lane in skills
+node opinion "Second opinion\nclean context (-p)" at 65,43 size 23x7 kind reviewer in opinionLane
+node opinionWork "CHALLENGE\nno prior conclusions\ntest assumptions" at 89,43 size 26x7 kind activity in opinionLane
+node opinionReport "VERDICT\nindependent risks\nconfidence" at 119,43 size 19x7 kind output in opinionLane
+
+node barrier "UNIFIED REPORT\nwait for all 3\ndedupe + prioritize" at 147,26 size 23x9 kind join
+decision verified "Verified?" at 173,27 size 15x7
+node output "OUTPUT\nverified\n+ evidence" at 190,26 size 11x9 kind success
+node resolve "Worker agent\nresolve findings\nupdate tests\nreturn evidence" at 164,43 size 22x9 kind failure
+
+edge configure feature -> policy from_port east to_port west via 22,31 22,15
+edge select policy -> orchestrator from_port south to_port north
+edge launch orchestrator -> dispatch from_port south to_port north
+edge run_embedded dispatch -> embedded from_port north to_port west via 40,14
+edge run_deep dispatch -> deep from_port east to_port west via 58,43 58,30
+edge run_opinion dispatch -> opinion from_port south to_port west via 40,46
+edge embedded_execute embedded -> embeddedWork from_port east to_port west
+edge embedded_emit embeddedWork -> embeddedReport from_port east to_port west
+edge deep_execute deep -> deepWork from_port east to_port west
+edge deep_emit deepWork -> deepReport from_port east to_port west
+edge opinion_execute opinion -> opinionWork from_port east to_port west
+edge opinion_emit opinionWork -> opinionReport from_port east to_port west
+edge embedded_join embeddedReport -> barrier from_port east to_port north via 158,14
+edge deep_join deepReport -> barrier from_port east to_port west
+edge opinion_join opinionReport -> barrier from_port east to_port south via 158,46
+edge assess barrier -> verified from_port east to_port west
+edge pass verified -> output kind success label "YES" from_port east to_port west
+edge fail verified -> resolve kind failure label "NO" from_port south to_port north
+edge remediate resolve -> dispatch kind back label "fix + reverify" from_port west to_port south via 160,47 160,58 40,58 40,46
+
+group metrics "" at 1,64 size 200x7 kind panel
+text agentsTitle "Verification policy" at 91,64 kind title
+text icon1 "⚙" at 5,67 kind metric
+text metric1 "Embedded: cheap deterministic\nchecks on every execution" at 12,66 kind plain
+text separator1 "│\n│\n│\n│\n│" at 52,65 kind dim
+text icon2 "♙" at 56,67 kind metric
+text metric2 "Deep pass: high-tier model\nfor contextual judgment" at 62,66 kind plain
+text separator2 "│\n│\n│\n│\n│" at 103,65 kind dim
+text icon3 "◇" at 107,67 kind metric
+text metric3 "Second opinion: clean session\nprevents context bias" at 113,66 kind plain
+text separator3 "│\n│\n│\n│\n│" at 155,65 kind dim
+text icon4 "▥" at 159,67 kind metric
+text metric4 "Barrier: all checks report\nbefore pass or remediation" at 165,66 kind plain

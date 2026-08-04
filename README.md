@@ -68,6 +68,52 @@ documentation. Run `dawl-tui --help` for the complete command list.
 
 ## Examples
 
+### Graph engineering gallery
+
+These are real `202 × 72` renders from the source files in `examples/`. Together
+they show the progression from a sequential single-context loop to parallel
+specialists, fail-closed review barriers, and chained verification skills.
+
+<table>
+  <tr>
+    <th>Loop engineering</th>
+    <th>Diamond graph</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/mateusdcc/dawl-tui/main/docs/assets/graph-loop.svg" alt="Detailed loop-engineering workflow"></td>
+    <td><img src="https://raw.githubusercontent.com/mateusdcc/dawl-tui/main/docs/assets/graph-diamond.svg" alt="Detailed diamond-graph workflow"></td>
+  </tr>
+  <tr>
+    <td>A planner, developer, tool runner, and verification agent share one sequential context. The diagram makes queueing, accumulated context, evidence, retries, and critical-path cost explicit.</td>
+    <td>An orchestrator defines typed task contracts for isolated research, architecture, and test-design agents. Their artifacts converge into high-tier synthesis with targeted missing-evidence recovery.</td>
+  </tr>
+  <tr>
+    <th>Fan-in / barrier graph</th>
+    <th>Verification orchestrator</th>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/mateusdcc/dawl-tui/main/docs/assets/graph-barrier.svg" alt="Detailed fan-in barrier workflow"></td>
+    <td><img src="https://raw.githubusercontent.com/mateusdcc/dawl-tui/main/docs/assets/graph-verification.svg" alt="Detailed verification-orchestration workflow"></td>
+  </tr>
+  <tr>
+    <td>Correctness, security, and visual reviewers inspect one candidate concurrently. The barrier waits for all three evidence-backed verdicts, fails closed, and reruns affected reviews after repair.</td>
+    <td>An orchestrator chains deterministic embedded checks, high-tier contextual review, and a clean-session second opinion. Only artifacts and verdicts cross contexts before findings are unified.</td>
+  </tr>
+</table>
+
+Render the gallery locally:
+
+```bash
+dawl-tui render examples/graph-loop.dtui --format svg --output graph-loop.svg
+dawl-tui render examples/graph-diamond.dtui --format svg --output graph-diamond.svg
+dawl-tui render examples/graph-barrier.dtui --format svg --output graph-barrier.svg
+dawl-tui render examples/graph-verification.dtui --format svg --output graph-verification.svg
+```
+
+The examples intentionally include agent responsibilities, tool boundaries,
+model-tier decisions, edge artifacts, evidence contracts, cost characteristics,
+and bounded failure paths—not only their graph topology.
+
 ### 1. Multi-Agent Approval Flow
 
 Real output rendered from `examples/approval.dtui` (`202 × 72` scene):
