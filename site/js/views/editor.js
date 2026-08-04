@@ -1,5 +1,6 @@
 /* Interactive Live .DTUI DSL Editor View Component */
 import { EXAMPLES_DATA } from "../data/examples.js";
+import { renderDtuiToSvg } from "../components/dtui-svg-renderer.js";
 
 export function renderEditorView(container) {
   container.innerHTML = getEditorLayoutHtml();
@@ -25,27 +26,27 @@ function getEditorLayoutHtml() {
         </div>
       </div>
 
-      <div class="grid-2col">
-        <div class="terminal-window">
+      <!-- Side-by-Side Dual Panel Layout -->
+      <div class="grid-2col" style="align-items: stretch; grid-template-columns: 1fr 1fr;">
+        <!-- Left Panel: Live Code Editor -->
+        <div class="terminal-window" style="display: flex; flex-direction: column; height: 100%;">
           <div class="terminal-header">
-            <span class="terminal-title">LIVE_EDITOR.DTUI</span>
-            <span class="badge badge-green" id="editor-status">SYNTAX OK</span>
+            <span class="terminal-title">PANEL_1: LIVE_EDITOR.DTUI</span>
+            <span class="badge badge-green" id="editor-status">LIVE AUTO-SYNC</span>
           </div>
-          <div class="terminal-body" style="padding: 10px;">
-            <textarea id="editor-input" class="cmd-input" style="width: 100%; height: 380px; font-family: var(--font-mono); font-size: 1.05rem; line-height: 1.4; color: var(--text-bright); background: transparent; resize: vertical; outline: none; border: none;" spellcheck="false"></textarea>
+          <div class="terminal-body" style="flex: 1; padding: 10px; display: flex; flex-direction: column;">
+            <textarea id="editor-input" class="cmd-input" style="width: 100%; min-height: 450px; flex: 1; font-family: var(--font-mono); font-size: 1rem; line-height: 1.45; color: var(--text-bright); background: transparent; resize: vertical; outline: none; border: none;" spellcheck="false" placeholder="Type .dtui syntax here..."></textarea>
           </div>
         </div>
 
-        <div class="terminal-window">
+        <!-- Right Panel: Live SVG Render Preview -->
+        <div class="terminal-window" style="display: flex; flex-direction: column; height: 100%;">
           <div class="terminal-header">
-            <span class="terminal-title">LIVE_RENDER_PREVIEW.SVG</span>
-            <div style="display: flex; gap: 6px;">
-              <button id="mode-svg" class="retro-btn active" style="padding: 2px 8px; font-size: 0.8rem;">SVG</button>
-              <button id="mode-ascii" class="retro-btn" style="padding: 2px 8px; font-size: 0.8rem;">ASCII</button>
-            </div>
+            <span class="terminal-title">PANEL_2: LIVE_SVG_RENDER.SVG</span>
+            <span class="badge badge-cyan" id="render-badge">SVG OUTPUT</span>
           </div>
-          <div class="terminal-body" id="editor-preview-body" style="min-height: 380px; display: flex; justify-content: center; align-items: center; overflow: auto;">
-            <span style="color: var(--text-dim);">Click 'RUN / RENDER' to update live view.</span>
+          <div class="terminal-body" id="editor-preview-body" style="flex: 1; min-height: 450px; display: flex; justify-content: center; align-items: center; overflow: auto; padding: 15px;">
+            <span style="color: var(--text-dim);">Live SVG rendering...</span>
           </div>
         </div>
       </div>
@@ -64,17 +65,7 @@ function bindEditorEvents(container) {
   if (btnRender) btnRender.addEventListener("click", () => handleRender(container));
   if (btnClear) btnClear.addEventListener("click", () => handleClear(container));
   if (btnCopy && textarea) btnCopy.addEventListener("click", () => handleCopyCode(btnCopy, textarea.value));
-
-  bindModeSwitchers(container);
-}
-
-function bindModeSwitchers(container) {
-  const modeSvg = container.querySelector("#mode-svg");
-  const modeAscii = container.querySelector("#mode-ascii");
-  if (modeSvg && modeAscii) {
-    modeSvg.addEventListener("click", () => switchMode(container, "svg"));
-    modeAscii.addEventListener("click", () => switchMode(container, "ascii"));
-  }
+  if (textarea) textarea.addEventListener("input", () => handleLiveInput(container));
 }
 
 function loadPreset(container, presetId) {
@@ -93,30 +84,26 @@ function handleRender(container) {
   const statusBadge = container.querySelector("#editor-status");
   if (!textarea || !previewBody) return;
 
-  const currentId = container.dataset.activeId || "graph-loop";
-  const activeMode = container.dataset.renderMode || "svg";
+  const currentId = container.dataset.activeId;
+  const example = EXAMPLES_DATA.find(ex => ex.id === currentId && ex.code === textarea.value);
 
   if (statusBadge) {
-    statusBadge.textContent = "RENDERED OK";
+    statusBadge.textContent = "SYNTAX OK";
     statusBadge.className = "badge badge-green";
   }
 
-  if (activeMode === "svg") {
-    fetch(`assets/svg/${currentId}.svg`)
+  if (example) {
+    fetch(`assets/svg/${example.id}.svg`)
       .then(r => r.ok ? r.text() : Promise.reject())
       .then(svg => { previewBody.innerHTML = svg; })
-      .catch(() => { previewBody.innerHTML = `<pre style="color: var(--text-main); font-family: var(--font-mono);">${getAsciiFallback(currentId)}</pre>`; });
+      .catch(() => { previewBody.innerHTML = renderDtuiToSvg(textarea.value); });
   } else {
-    previewBody.innerHTML = `<pre style="color: var(--text-main); font-family: var(--font-mono); white-space: pre-wrap; font-size: 0.95rem;">${getAsciiFallback(currentId)}</pre>`;
+    previewBody.innerHTML = renderDtuiToSvg(textarea.value);
   }
 }
 
-function switchMode(container, mode) {
-  container.dataset.renderMode = mode;
-  const modeSvg = container.querySelector("#mode-svg");
-  const modeAscii = container.querySelector("#mode-ascii");
-  if (modeSvg) modeSvg.classList.toggle("active", mode === "svg");
-  if (modeAscii) modeAscii.classList.toggle("active", mode === "ascii");
+function handleLiveInput(container) {
+  container.dataset.activeId = "";
   handleRender(container);
 }
 
@@ -124,7 +111,7 @@ function handleClear(container) {
   const textarea = container.querySelector("#editor-input");
   const previewBody = container.querySelector("#editor-preview-body");
   if (textarea) textarea.value = "";
-  if (previewBody) previewBody.innerHTML = `<span style="color: var(--text-dim);">Editor cleared. Type .dtui syntax to render.</span>`;
+  if (previewBody) previewBody.innerHTML = renderDtuiToSvg("");
 }
 
 function handleCopyCode(button, text) {
@@ -132,9 +119,4 @@ function handleCopyCode(button, text) {
   const old = button.textContent;
   button.textContent = "COPIED!";
   setTimeout(() => button.textContent = old, 1500);
-}
-
-function getAsciiFallback(id) {
-  const ex = EXAMPLES_DATA.find(e => e.id === id);
-  return ex ? ex.renderAscii : "[ Live rendered ASCII diagram ]";
 }
