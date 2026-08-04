@@ -3,7 +3,6 @@ import { initCrtController } from "./components/crt.js";
 import { initNavigation } from "./components/navigation.js";
 import { initModalController } from "./components/modal.js";
 import { renderLandingView } from "./views/landing.js";
-import { renderEditorView } from "./views/editor.js";
 import { renderDocsView } from "./views/docs.js";
 import { renderChangelogView } from "./views/changelog.js";
 import { renderExamplesView } from "./views/examples.js";
@@ -22,7 +21,6 @@ function handleRouteChanged(viewName) {
 
   const viewRenderers = {
     landing: renderLandingView,
-    editor: renderEditorView,
     docs: renderDocsView,
     changelog: renderChangelogView,
     examples: renderExamplesView
