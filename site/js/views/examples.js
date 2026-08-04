@@ -9,7 +9,7 @@ export function renderExamplesView(container) {
 }
 
 function getExamplesLayoutHtml() {
-  const categories = ["ALL", "Agent Workflows", "CI/CD Pipelines", "Approval Loops", "Security & Barriers", "Microservices"];
+  const categories = ["ALL", "Pure Topology (Auto-Layout)", "Agent Workflows", "CI/CD Pipelines", "Approval Loops", "Security & Barriers", "Microservices"];
   const filterBtns = categories.map((cat, idx) => `
     <button class="nav-btn filter-btn ${idx === 0 ? 'active' : ''}" data-cat="${cat}">${cat}</button>
   `).join("");
@@ -17,7 +17,7 @@ function getExamplesLayoutHtml() {
   return `
     <div>
       <div style="margin-bottom: 15px;">
-        <input type="text" class="search-input" id="example-search" placeholder="Search workflow examples..." />
+        <input type="text" class="search-input" id="example-search" placeholder="Search workflow examples by keyword, topology, or tag..." />
       </div>
       <div class="filter-bar">${filterBtns}</div>
       <div class="grid-2col" id="examples-grid"></div>
@@ -33,7 +33,7 @@ function bindFilterAndSearch(container) {
   const applyFilters = () => {
     const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
     const filtered = EXAMPLES_DATA.filter(ex => {
-      const matchCat = activeCat === "ALL" || ex.category === activeCat;
+      const matchCat = activeCat === "ALL" || ex.category === activeCat || ex.subCategory === activeCat;
       const matchQuery = ex.title.toLowerCase().includes(query) || ex.description.toLowerCase().includes(query) || ex.id.includes(query);
       return matchCat && matchQuery;
     });
@@ -64,11 +64,13 @@ function renderExampleCards(container, list) {
 }
 
 function createCardHtml(ex) {
+  const badgeClass = ex.isAutoLayout ? "badge-green" : "badge-cyan";
+  const badgeLabel = ex.isAutoLayout ? "AUTO-LAYOUT (TOPOLOGY)" : ex.category;
   return `
     <div class="example-card" data-id="${ex.id}">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
         <h3 style="color: var(--text-bright); font-size: 1.1rem;">${ex.title}</h3>
-        <span class="badge badge-cyan">${ex.category}</span>
+        <span class="badge ${badgeClass}">${badgeLabel}</span>
       </div>
       <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 10px;">${ex.description}</p>
       <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
