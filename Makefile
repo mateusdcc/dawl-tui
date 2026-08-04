@@ -10,5 +10,9 @@ verify:
 example:
 	cargo run -- render examples/approval.dtui --format text --width 180 --height 52
 
+site:
+	python3 -m http.server 8080 --directory site
+
 bench:
 	cargo bench --bench pipeline
+
