@@ -1,64 +1,47 @@
 diagram loopEngineering "Loop engineering: one agent, one sequential context"
-viewport 202x72
 theme midnight
 direction right
 
-text subtitle "A concrete feature task moves through planning, implementation, verification, and retry in a single context window" at 30,2 kind dim
+node input "INPUT\nfeature request\nacceptance criteria\nrepo constraints" kind input
+node phase "active task" kind phase
 
-node input "INPUT\n\nfeature request\nacceptance criteria\nrepo constraints" at 1,25 size 20x10 kind input
-node phase "active task" at 3,37 size 16x3 kind phase
+group cycle "single-agent task loop" kind repeat dashed
 
-group cycle "single-agent task loop" at 24,5 size 134x56 kind repeat dashed
+group planning "1 · plan" kind group in cycle
+node planner "Planner agent\nread request\ninspect codebase\nidentify risks" kind agent in planning
+node plan "WORK PLAN\nfiles • steps\nverification contract" kind output in planning
 
-group planning "1 · plan" at 27,7 size 34x22 kind group in cycle
-node planner "Planner agent\n\nread request\ninspect codebase\nidentify risks" at 32,11 size 23x9 kind agent in planning
-node plan "WORK PLAN\nfiles • steps\nverification contract" at 31,22 size 25x5 kind output in planning
+group building "2 · implement" kind group in cycle
+node developer "Developer agent\nedit scoped files\nkeep invariants\nrecord decisions" kind agent in building
+node tools "TOOLS\nsearch\nedit\nbuild" kind shell in building
+node patch "PATCH\ncode + tests" kind output in building
 
-group building "2 · implement" at 64,7 size 43x22 kind group in cycle
-node developer "Developer agent\n\nedit scoped files\nkeep invariants\nrecord decisions" at 68,11 size 22x9 kind agent in building
-node tools "TOOLS\nsearch\nedit\nbuild" at 94,11 size 10x9 kind shell in building
-node patch "PATCH\ncode + tests" at 76,23 size 18x4 kind output in building
+group verifying "3 · verify" kind group in cycle
+node reviewer "Verification agent\nreview diff\ncheck contract\nchallenge assumptions" kind reviewer in verifying
+node checks "EVIDENCE\nunit tests\nlint / build\nUI screenshot" kind activity in verifying
+node evidence "REPORT\nlogs • citations" kind output in verifying
+decision pass "Pass?" in verifying
+node findings "FINDINGS\nseverity • file\nrequired fix" kind failure in verifying
 
-group verifying "3 · verify" at 110,7 size 44x43 kind group in cycle
-node reviewer "Verification agent\n\nreview diff\ncheck contract\nchallenge assumptions" at 114,11 size 23x9 kind reviewer in verifying
-node checks "EVIDENCE\nunit tests\nlint / build\nUI screenshot" at 140,11 size 11x10 kind activity in verifying
-node evidence "REPORT\nlogs • citations" at 135,24 size 18x5 kind output in verifying
-decision pass "Pass?" at 123,32 size 15x7 in verifying
-node findings "FINDINGS\nseverity • file\nrequired fix" at 113,43 size 20x5 kind failure in verifying
+node context "SHARED CONTEXT\nplan • patch • logs\nfindings accumulate" kind activity in cycle
+node queue "WAITING\nindependent tasks\nblocked until this loop releases" kind shell in cycle
 
-node context "SHARED CONTEXT\nplan • patch • logs\nfindings accumulate" at 68,37 size 26x7 kind activity in cycle
-node queue "WAITING\nindependent tasks\ncannot start until\nthis loop releases" at 31,46 size 25x8 kind shell in cycle
+node checkpoint "Checkpoint\ncommit artifact\nadvance queue" kind success
+node output "OUTPUT\nverified patch\nevidence report" kind output
 
-node checkpoint "Checkpoint\ncommit artifact\nadvance queue" at 162,26 size 18x7 kind success
-node output "OUTPUT\n\nverified patch\nevidence report" at 184,26 size 17x8 kind output
-
-edge receive input -> phase from_port south to_port north
-edge start phase -> planner from_port east to_port west via 22,38 22,15
-edge plan_artifact planner -> plan from_port south to_port north
-edge handoff plan -> developer from_port east to_port west via 62,24 62,15
-edge use_tools developer -> tools from_port east to_port west
-edge produce_patch tools -> patch from_port south to_port east via 99,25
-edge patch_review patch -> reviewer from_port east to_port west via 108,25 108,15
-edge review_checks reviewer -> checks from_port east to_port west
-edge checks_evidence checks -> evidence from_port south to_port north
-edge evidence_gate evidence -> pass from_port west to_port north via 130,26
-edge rejected pass -> findings kind failure label "NO" from_port south to_port north
-edge retry findings -> developer kind back label "fix + rerun" from_port west to_port south via 108,46 108,57 79,57 79,20
-edge accepted pass -> checkpoint kind success label "YES" from_port east to_port west via 157,35 157,29
-edge publish checkpoint -> output kind success from_port east to_port west
-edge context_patch patch -> context kind muted from_port south to_port north
-edge waiting input -> queue kind muted from_port east to_port west via 22,30 22,50
-
-group metrics "" at 1,64 size 200x7 kind panel
-text agentsTitle "Loop cost and behavior" at 90,64 kind title
-text icon1 "♙" at 5,67 kind metric
-text metric1 "Concurrency: 1 active agent\nper stage" at 11,66 kind plain
-text separator1 "│\n│\n│\n│\n│" at 47,65 kind dim
-text icon2 "▣" at 51,67 kind metric
-text metric2 "Context: reused and growing\nacross every retry" at 57,66 kind plain
-text separator2 "│\n│\n│\n│\n│" at 100,65 kind dim
-text icon3 "⌛" at 104,67 kind metric
-text metric3 "Latency: plan + build + verify\nall paid sequentially" at 110,66 kind plain
-text separator3 "│\n│\n│\n│\n│" at 151,65 kind dim
-text icon4 "!" at 155,67 kind metric
-text metric4 "Best for small, dependent tasks\nRisk: queueing + context drift" at 161,66 kind plain
+edge receive input -> phase
+edge start phase -> planner
+edge plan_artifact planner -> plan
+edge handoff plan -> developer
+edge use_tools developer -> tools
+edge produce_patch tools -> patch
+edge patch_review patch -> reviewer
+edge review_checks reviewer -> checks
+edge checks_evidence checks -> evidence
+edge evidence_gate evidence -> pass
+edge rejected pass -> findings kind failure label "NO"
+edge retry findings -> developer kind back label "fix + rerun"
+edge accepted pass -> checkpoint kind success label "YES"
+edge publish checkpoint -> output kind success
+edge context_patch patch -> context kind muted
+edge waiting input -> queue kind muted

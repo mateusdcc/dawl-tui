@@ -48,7 +48,7 @@ fn infer_pass(
     groups: &mut IndexMap<String, Rect>,
 ) {
     for group in &diagram.groups {
-        if groups.contains_key(&group.id) {
+        if is_explicit(diagram, &group.id) {
             continue;
         }
         let mut children = node_children(diagram, nodes, &group.id);

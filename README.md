@@ -70,8 +70,9 @@ documentation. Run `dawl-tui --help` for the complete command list.
 
 ### Graph engineering gallery
 
-These are real `202 × 72` renders from the source files in `examples/`. Together
-they show the progression from a sequential single-context loop to parallel
+These renders are sized entirely from labels, nesting, and graph topology; the
+source files contain no viewport, coordinates, rectangle sizes, ports, or route
+points. Together they progress from a sequential single-context loop to parallel
 specialists, fail-closed review barriers, and chained verification skills.
 
 <table>

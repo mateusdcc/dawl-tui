@@ -1,63 +1,46 @@
 diagram fanInBarrier "Fan-in barrier: three independent release reviews"
-viewport 202x72
 theme midnight
 direction right
 
-text subtitle "Correctness, security, and visual reviewers inspect the same candidate concurrently; release waits for all verdicts" at 34,2 kind dim
+node candidate "CANDIDATE\nfeature patch\ntests • screenshots\nacceptance criteria" kind input
+node split "Evaluate" kind fork
 
-node candidate "CANDIDATE\n\nfeature patch\ntests • screenshots\nacceptance criteria" at 1,26 size 19x10 kind input
-node split "Evaluate" at 25,28 size 12x5 kind fork
+group reviewers "parallel review nodes · isolated perspectives" kind parallel
 
-group reviewers "parallel review nodes · isolated perspectives" at 42,5 size 91x55 kind parallel
+group correctnessLane "correctness contract" kind lane in reviewers
+node correctness "Correctness agent\nhigh-tier review" kind reviewer in correctnessLane
+node correctnessChecks "CHECKS\nrequirements • invariants\nedge cases • regression" kind activity in correctnessLane
+node correctnessReport "VERDICT\nPASS or defects\ntest evidence" kind output in correctnessLane
 
-group correctnessLane "correctness contract" at 44,7 size 86x15 kind lane in reviewers
-node correctness "Correctness agent\nhigh-tier review" at 47,11 size 20x7 kind reviewer in correctnessLane
-node correctnessChecks "CHECKS\nrequirements • invariants\nedge cases • regression" at 71,11 size 27x7 kind activity in correctnessLane
-node correctnessReport "VERDICT\nPASS or defects\ntest evidence" at 101,11 size 24x7 kind output in correctnessLane
+group securityLane "security contract" kind lane in reviewers
+node security "Security agent\nhigh-tier review" kind reviewer in securityLane
+node securityChecks "CHECKS\nauth • secrets • input\ndeps • threat paths" kind activity in securityLane
+node securityReport "VERDICT\nPASS or findings\nattack narrative" kind output in securityLane
 
-group securityLane "security contract" at 44,23 size 86x15 kind lane in reviewers
-node security "Security agent\nhigh-tier review" at 47,27 size 20x7 kind reviewer in securityLane
-node securityChecks "CHECKS\nauth • secrets • input\ndeps • threat paths" at 71,27 size 25x7 kind activity in securityLane
-node securityReport "VERDICT\nPASS or findings\nattack narrative" at 101,27 size 24x7 kind output in securityLane
+group visualLane "visual / UX contract" kind lane in reviewers
+node visual "Visual agent\nheadless browser" kind reviewer in visualLane
+node visualChecks "CHECKS\nscreenshots • responsive\na11y • baseline diff" kind activity in visualLane
+node visualReport "VERDICT\nPASS or defects\nimage evidence" kind output in visualLane
 
-group visualLane "visual / UX contract" at 44,39 size 86x15 kind lane in reviewers
-node visual "Visual agent\nheadless browser" at 47,43 size 20x7 kind reviewer in visualLane
-node visualChecks "CHECKS\nscreenshots • responsive\na11y • baseline diff" at 71,43 size 27x7 kind activity in visualLane
-node visualReport "VERDICT\nPASS or defects\nimage evidence" at 101,43 size 24x7 kind output in visualLane
+node barrier "BARRIER\nwait for 3/3\nmerge findings" kind join
+decision release "Release?"
+node publish "PUBLISH\nrelease bundle\n+ evidence" kind success
+node repair "Repair worker\nassign owners\nresolve findings\nattach evidence" kind failure
 
-node barrier "BARRIER\nwait for 3/3\nmerge findings" at 138,26 size 18x9 kind join
-decision release "Release?" at 162,27 size 15x7
-node publish "PUBLISH\nrelease bundle\n+ evidence" at 184,26 size 17x9 kind success
-node repair "Repair worker\nassign owners\nresolve findings\nattach evidence" at 159,43 size 22x9 kind failure
-
-edge fan candidate -> split from_port east to_port west
-edge review_correctness split -> correctness from_port north to_port west via 31,14
-edge review_security split -> security from_port east to_port west via 40,30
-edge review_visual split -> visual from_port south to_port west via 31,46
-edge correctness_run correctness -> correctnessChecks from_port east to_port west
-edge correctness_emit correctnessChecks -> correctnessReport from_port east to_port west
-edge security_run security -> securityChecks from_port east to_port west
-edge security_emit securityChecks -> securityReport from_port east to_port west
-edge visual_run visual -> visualChecks from_port east to_port west
-edge visual_emit visualChecks -> visualReport from_port east to_port west
-edge correctness_join correctnessReport -> barrier from_port east to_port north via 147,14
-edge security_join securityReport -> barrier from_port east to_port west
-edge visual_join visualReport -> barrier from_port east to_port south via 147,46
-edge decide barrier -> release from_port east to_port west
-edge approved release -> publish kind success label "3/3 PASS" from_port east to_port west
-edge rejected release -> repair kind failure label "ANY FAIL" from_port south to_port north
-edge recheck repair -> split kind back label "targeted rerun" from_port west to_port south via 156,47 156,58 31,58 31,33
-
-group metrics "" at 1,64 size 200x7 kind panel
-text agentsTitle "Barrier guarantees" at 92,64 kind title
-text icon1 "♙♙♙" at 5,67 kind metric
-text metric1 "Reviewers: 3 parallel\nindependent perspectives" at 14,66 kind plain
-text separator1 "│\n│\n│\n│\n│" at 52,65 kind dim
-text icon2 "▥" at 56,67 kind metric
-text metric2 "Barrier: downstream blocked\nuntil every report arrives" at 62,66 kind plain
-text separator2 "│\n│\n│\n│\n│" at 105,65 kind dim
-text icon3 "✓" at 109,67 kind metric
-text metric3 "Release rule: exactly 3/3 PASS\nwith evidence attached" at 115,66 kind plain
-text separator3 "│\n│\n│\n│\n│" at 157,65 kind dim
-text icon4 "↻" at 161,67 kind metric
-text metric4 "Failure: repair findings\nthen rerun affected reviews" at 167,66 kind plain
+edge fan candidate -> split
+edge review_correctness split -> correctness
+edge review_security split -> security
+edge review_visual split -> visual
+edge correctness_run correctness -> correctnessChecks
+edge correctness_emit correctnessChecks -> correctnessReport
+edge security_run security -> securityChecks
+edge security_emit securityChecks -> securityReport
+edge visual_run visual -> visualChecks
+edge visual_emit visualChecks -> visualReport
+edge correctness_join correctnessReport -> barrier
+edge security_join securityReport -> barrier
+edge visual_join visualReport -> barrier
+edge decide barrier -> release
+edge approved release -> publish kind success label "3/3 PASS"
+edge rejected release -> repair kind failure label "ANY FAIL"
+edge recheck repair -> split kind back label "targeted rerun"

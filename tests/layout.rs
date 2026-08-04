@@ -162,4 +162,8 @@ fn nested_groups_preserve_the_diagram_margin() {
     let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
     assert!(layout.groups["outer"].x >= 2);
     assert!(layout.groups["outer"].y >= 2);
+    assert!(layout.groups["outer"].contains(dawl_tui::model::Point {
+        x: layout.groups["inner"].right(),
+        y: layout.groups["inner"].bottom(),
+    }));
 }
