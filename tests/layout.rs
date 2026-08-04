@@ -150,3 +150,16 @@ fn canvas_expands_for_free_text_without_a_viewport() {
     assert!(layout.size.width >= 90);
     assert!(layout.size.height >= 33);
 }
+
+#[test]
+fn nested_groups_preserve_the_diagram_margin() {
+    let source = r#"
+    diagram nested "Nested"
+    group outer "Outer"
+    group inner "Inner" in outer
+    node child "Child" in inner
+    "#;
+    let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
+    assert!(layout.groups["outer"].x >= 2);
+    assert!(layout.groups["outer"].y >= 2);
+}

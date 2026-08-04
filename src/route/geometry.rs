@@ -5,8 +5,7 @@ use crate::canvas::Rect;
 use crate::layout::Layout;
 use crate::model::Point;
 
-pub fn back_path(start: Point, end: Point) -> Vec<Point> {
-    let floor = start.y.max(end.y).saturating_add(3);
+pub fn back_path(start: Point, end: Point, floor: u16) -> Vec<Point> {
     let outside = end.x.saturating_sub(2);
     simplify(vec![
         start,

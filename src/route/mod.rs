@@ -67,13 +67,17 @@ fn path(
         return Ok(simplify(orthogonalize(start, &edge.via, end)));
     }
     if edge.kind == EdgeKind::Back {
-        return Ok(back_path(start, end));
+        return Ok(back_path(start, end, back_floor(layout)));
     }
     let finder = Pathfinder::new(layout.size, blocked, tracks);
     finder
         .find(start, end)
         .map(simplify)
         .ok_or_else(|| route_error(edge))
+}
+
+fn back_floor(layout: &Layout) -> u16 {
+    layout.size.height.saturating_sub(2)
 }
 
 fn node_rect(layout: &Layout, id: &str, edge: &Edge) -> Result<Rect> {

@@ -2,7 +2,9 @@ use dagre::graph::{Graph, GraphOptions};
 use dagre::{EdgeLabel, LayoutOptions, NodeLabel, RankDir};
 use indexmap::IndexMap;
 
-use super::geometry::{measure, text_size, CANVAS_PADDING_X, CANVAS_PADDING_Y};
+use super::geometry::{
+    measure, text_size, CANVAS_PADDING_X, CANVAS_PADDING_Y, GROUP_PADDING_X, GROUP_PADDING_Y,
+};
 use super::shift::{shift, Coordinate};
 use crate::canvas::Rect;
 use crate::error::{Error, Result};
@@ -26,7 +28,7 @@ pub fn node_rects(diagram: &Diagram, graph: &LayoutGraph) -> Result<IndexMap<Str
         let label = graph.node(&node.id).ok_or_else(|| missing(&node.id))?;
         nodes.insert(node.id.clone(), output_rect(label, &node.id)?);
     }
-    normalize(&mut nodes);
+    normalize(diagram, &mut nodes);
     Ok(nodes)
 }
 
@@ -134,15 +136,42 @@ fn output_rect(label: &NodeLabel, id: &str) -> Result<Rect> {
     })
 }
 
-fn normalize(nodes: &mut IndexMap<String, Rect>) {
+fn normalize(diagram: &Diagram, nodes: &mut IndexMap<String, Rect>) {
     let x = nodes.values().map(|rect| rect.x).min().unwrap_or(0);
     let y = nodes.values().map(|rect| rect.y).min().unwrap_or(0);
-    let dx = i32::from(CANVAS_PADDING_X) - i32::from(x);
-    let dy = i32::from(CANVAS_PADDING_Y) - i32::from(y);
+    let depth = max_group_depth(diagram);
+    let margin_x = CANVAS_PADDING_X.saturating_add(GROUP_PADDING_X.saturating_mul(depth));
+    let margin_y = CANVAS_PADDING_Y.saturating_add(GROUP_PADDING_Y.saturating_mul(depth));
+    let dx = i32::from(margin_x) - i32::from(x);
+    let dy = i32::from(margin_y) - i32::from(y);
     for rect in nodes.values_mut() {
         shift(rect, Coordinate::X, dx);
         shift(rect, Coordinate::Y, dy);
     }
+}
+
+fn max_group_depth(diagram: &Diagram) -> u16 {
+    diagram
+        .groups
+        .iter()
+        .map(|group| group_depth(&group.id, diagram))
+        .max()
+        .unwrap_or(0)
+}
+
+fn group_depth(id: &str, diagram: &Diagram) -> u16 {
+    let mut depth = 1u16;
+    let mut current = id;
+    while let Some(parent) = diagram
+        .groups
+        .iter()
+        .find(|group| group.id == current)
+        .and_then(|group| group.parent.as_deref())
+    {
+        depth = depth.saturating_add(1);
+        current = parent;
+    }
+    depth
 }
 
 fn cell(value: f64) -> u16 {
