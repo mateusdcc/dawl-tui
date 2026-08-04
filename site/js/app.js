@@ -1,6 +1,7 @@
 /* Main Application Router & Entry Point */
 import { initCrtController } from "./components/crt.js";
 import { initNavigation } from "./components/navigation.js";
+import { initModalController } from "./components/modal.js";
 import { renderLandingView } from "./views/landing.js";
 import { renderDocsView } from "./views/docs.js";
 import { renderChangelogView } from "./views/changelog.js";
@@ -8,6 +9,7 @@ import { renderExamplesView } from "./views/examples.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initCrtController();
+  initModalController();
   initNavigation(handleRouteChanged);
   initSystemTicker();
   handleRouteChanged("landing");

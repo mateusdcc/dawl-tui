@@ -1,5 +1,6 @@
 /* Examples Library View Component */
 import { EXAMPLES_DATA } from "../data/examples.js";
+import { openModal } from "../components/modal.js";
 
 export function renderExamplesView(container) {
   container.innerHTML = getExamplesLayoutHtml();
@@ -76,10 +77,10 @@ function createCardHtml(ex) {
         <button class="retro-btn btn-mode-code" style="padding: 2px 8px; font-size: 0.8rem;">.DTUI CODE</button>
         <button class="retro-btn btn-copy" style="padding: 2px 8px; font-size: 0.8rem; margin-left: auto;">COPY</button>
       </div>
-      <div class="svg-preview-container svg-box-${ex.id}" id="svg-box-${ex.id}">
+      <div class="svg-preview-container svg-box-${ex.id}" id="svg-box-${ex.id}" style="cursor: zoom-in;" title="Click to zoom in floating window">
         <span style="color: var(--text-dim);">Loading SVG output...</span>
       </div>
-      <pre class="example-preview code-box-${ex.id}" id="code-box-${ex.id}" style="display: none;"></pre>
+      <pre class="example-preview code-box-${ex.id}" id="code-box-${ex.id}" style="display: none; cursor: zoom-in;" title="Click to expand"></pre>
     </div>
   `;
 }
@@ -99,7 +100,23 @@ function bindCardInteractions(grid) {
     const example = EXAMPLES_DATA.find(ex => ex.id === id);
     if (!example) return;
     setupTabButtons(card, example);
+    bindZoomEvents(card, example);
   });
+}
+
+function bindZoomEvents(card, example) {
+  const svgBox = card.querySelector(`.svg-box-${example.id}`);
+  const codeBox = card.querySelector(`.code-box-${example.id}`);
+  if (svgBox) {
+    svgBox.addEventListener("click", () => {
+      openModal(`${example.title} — SVG DIAGRAM`, svgBox.innerHTML);
+    });
+  }
+  if (codeBox) {
+    codeBox.addEventListener("click", () => {
+      openModal(`${example.title} — CODE PREVIEW`, `<pre style="white-space: pre-wrap; font-family: var(--font-mono); color: var(--text-main);">${codeBox.textContent}</pre>`);
+    });
+  }
 }
 
 function setupTabButtons(card, example) {
