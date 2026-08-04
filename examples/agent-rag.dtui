@@ -1,0 +1,15 @@
+diagram rag "Autonomous RAG Workflow"
+viewport 100x28
+direction right
+theme midnight
+
+node query "User Query" kind input
+node embed "Embedding Model" kind activity
+node vdb "Vector DB Search" kind activity
+node rerank "Reranker" kind reviewer
+node llm "LLM Synthesizer" kind success
+
+edge e1 query -> embed
+edge e2 embed -> vdb
+edge e3 vdb -> rerank
+edge e4 rerank -> llm

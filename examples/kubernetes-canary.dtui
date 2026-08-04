@@ -1,0 +1,15 @@
+diagram canary "Canary Deployment Pipeline"
+viewport 110x30
+direction right
+theme midnight
+
+node build "Docker Build" kind activity
+node canary "Canary Pods (10%)" kind agent
+decision metrics "Error Rate < 0.1%?"
+node full "Full Rollout (100%)" kind success
+node abort "Rollback & Alert" kind failure
+
+edge e1 build -> canary
+edge e2 canary -> metrics
+edge e3 metrics -> full kind success label "HEALTHY"
+edge e4 metrics -> abort kind failure label "DEGRADED"

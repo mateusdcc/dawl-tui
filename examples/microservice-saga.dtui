@@ -1,0 +1,15 @@
+diagram saga "Distributed Order Saga"
+viewport 110x30
+direction right
+theme midnight
+
+node order "Create Order" kind activity
+node payment "Process Payment" kind activity
+node inventory "Reserve Stock" kind activity
+node ship "Schedule Delivery" kind success
+node cancel "Compensate & Refund" kind failure
+
+edge e1 order -> payment
+edge e2 payment -> inventory
+edge e3 inventory -> ship
+edge e4 payment -> cancel kind failure label "FAILED"

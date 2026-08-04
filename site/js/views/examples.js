@@ -15,14 +15,11 @@ function getExamplesLayoutHtml() {
 
   return `
     <div>
-      <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
-        <input type="text" class="search-input" id="example-search" placeholder="Search workflow examples by name or keyword..." style="flex: 1;" />
+      <div style="margin-bottom: 15px;">
+        <input type="text" class="search-input" id="example-search" placeholder="Search workflow examples..." />
       </div>
-      <div class="filter-bar">
-        ${filterBtns}
-      </div>
-      <div class="grid-2col" id="examples-grid">
-      </div>
+      <div class="filter-bar">${filterBtns}</div>
+      <div class="grid-2col" id="examples-grid"></div>
     </div>
   `;
 }
@@ -57,29 +54,43 @@ function renderExampleCards(container, list) {
   const grid = container.querySelector("#examples-grid");
   if (!grid) return;
   if (list.length === 0) {
-    grid.innerHTML = `<div style="grid-column: 1/-1; padding: 20px; text-align: center;">No examples match search criteria.</div>`;
+    grid.innerHTML = `<div style="grid-column: 1/-1; padding: 20px; text-align: center;">No examples found.</div>`;
     return;
   }
   grid.innerHTML = list.map(ex => createCardHtml(ex)).join("");
   bindCardInteractions(grid);
+  list.forEach(ex => loadCardSvg(ex.id));
 }
 
 function createCardHtml(ex) {
   return `
     <div class="example-card" data-id="${ex.id}">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
         <h3 style="color: var(--text-bright); font-size: 1.1rem;">${ex.title}</h3>
         <span class="badge badge-cyan">${ex.category}</span>
       </div>
       <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 10px;">${ex.description}</p>
-      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-        <button class="retro-btn btn-mode-ascii" style="padding: 2px 8px; font-size: 0.8rem;">ASCII</button>
+      <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+        <button class="retro-btn btn-mode-svg active" style="padding: 2px 8px; font-size: 0.8rem;">SVG RENDER</button>
+        <button class="retro-btn btn-mode-ascii" style="padding: 2px 8px; font-size: 0.8rem;">ANSI / ASCII</button>
         <button class="retro-btn btn-mode-code" style="padding: 2px 8px; font-size: 0.8rem;">.DTUI CODE</button>
-        <button class="retro-btn btn-copy" style="padding: 2px 8px; font-size: 0.8rem; margin-left: auto;">COPY CODE</button>
+        <button class="retro-btn btn-copy" style="padding: 2px 8px; font-size: 0.8rem; margin-left: auto;">COPY</button>
       </div>
-      <pre class="example-preview card-view-${ex.id}">${ex.renderAscii}</pre>
+      <div class="svg-preview-container svg-box-${ex.id}" id="svg-box-${ex.id}">
+        <span style="color: var(--text-dim);">Loading SVG output...</span>
+      </div>
+      <pre class="example-preview code-box-${ex.id}" id="code-box-${ex.id}" style="display: none;"></pre>
     </div>
   `;
+}
+
+function loadCardSvg(id) {
+  const box = document.getElementById(`svg-box-${id}`);
+  if (!box) return;
+  fetch(`assets/svg/${id}.svg`)
+    .then(res => res.ok ? res.text() : Promise.reject())
+    .then(svgText => { box.innerHTML = svgText; })
+    .catch(() => { box.innerHTML = `<span style="color: var(--text-amber);">SVG preview available via CLI render command.</span>`; });
 }
 
 function bindCardInteractions(grid) {
@@ -87,20 +98,40 @@ function bindCardInteractions(grid) {
     const id = card.getAttribute("data-id");
     const example = EXAMPLES_DATA.find(ex => ex.id === id);
     if (!example) return;
-    const preview = card.querySelector(`.card-view-${id}`);
-    const btnAscii = card.querySelector(".btn-mode-ascii");
-    const btnCode = card.querySelector(".btn-mode-code");
-    const btnCopy = card.querySelector(".btn-copy");
-
-    if (btnAscii && preview) btnAscii.addEventListener("click", () => preview.textContent = example.renderAscii);
-    if (btnCode && preview) btnCode.addEventListener("click", () => preview.textContent = example.code);
-    if (btnCopy) btnCopy.addEventListener("click", () => handleCopyCode(btnCopy, example.code));
+    setupTabButtons(card, example);
   });
 }
 
-function handleCopyCode(button, text) {
+function setupTabButtons(card, example) {
+  const svgBox = card.querySelector(`.svg-box-${example.id}`);
+  const codeBox = card.querySelector(`.code-box-${example.id}`);
+  const btnSvg = card.querySelector(".btn-mode-svg");
+  const btnAscii = card.querySelector(".btn-mode-ascii");
+  const btnCode = card.querySelector(".btn-mode-code");
+  const btnCopy = card.querySelector(".btn-copy");
+
+  const setActive = (activeBtn, showSvg, contentText) => {
+    [btnSvg, btnAscii, btnCode].forEach(b => b && b.classList.remove("active"));
+    activeBtn.classList.add("active");
+    if (showSvg) {
+      svgBox.style.display = "flex";
+      codeBox.style.display = "none";
+    } else {
+      svgBox.style.display = "none";
+      codeBox.style.display = "block";
+      codeBox.textContent = contentText;
+    }
+  };
+
+  if (btnSvg) btnSvg.addEventListener("click", () => setActive(btnSvg, true, ""));
+  if (btnAscii) btnAscii.addEventListener("click", () => setActive(btnAscii, false, example.renderAscii));
+  if (btnCode) btnCode.addEventListener("click", () => setActive(btnCode, false, example.code));
+  if (btnCopy) btnCopy.addEventListener("click", () => handleCopy(btnCopy, example.code));
+}
+
+function handleCopy(button, text) {
   navigator.clipboard.writeText(text);
-  const oldText = button.textContent;
+  const old = button.textContent;
   button.textContent = "COPIED!";
-  setTimeout(() => button.textContent = oldText, 1500);
+  setTimeout(() => button.textContent = old, 1500);
 }
