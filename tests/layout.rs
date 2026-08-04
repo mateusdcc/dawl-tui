@@ -93,3 +93,60 @@ fn barycenter_sweep_reduces_a_two_edge_crossing() {
     let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
     assert!(layout.nodes["d"].y < layout.nodes["c"].y);
 }
+
+#[test]
+fn automatic_nodes_use_intrinsic_dimensions_and_padding() {
+    let graph = parse("diagram sized \"Sized\"\nnode a \"wide label\\nline two\"\n").unwrap();
+    let layout = layout_diagram(&graph, &Default::default()).unwrap();
+    let node = layout.nodes["a"];
+    assert_eq!((node.width, node.height), (14, 4));
+    assert!(node.x >= 2 && node.y >= 2);
+    assert!(layout.size.width >= node.right() + 3);
+    assert!(layout.size.height >= node.bottom() + 3);
+}
+
+#[test]
+fn compound_topology_separates_groups_and_contains_children() {
+    let source = r#"
+    diagram compound "Compound"
+    group left "Left lane"
+    group right "Right lane"
+    node a "A" in left
+    node b "B" in right
+    edge flow a -> b
+    "#;
+    let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
+    assert!(layout.groups["left"].right() < layout.groups["right"].x);
+    assert!(layout.groups["left"].contains(dawl_tui::model::Point {
+        x: layout.nodes["a"].x,
+        y: layout.nodes["a"].y,
+    }));
+    assert!(layout.groups["right"].contains(dawl_tui::model::Point {
+        x: layout.nodes["b"].x,
+        y: layout.nodes["b"].y,
+    }));
+}
+
+#[test]
+fn automatic_rank_and_node_spacing_are_consistent() {
+    let source = r#"
+    diagram spacing "Spacing"
+    node root "Root"
+    node one "One"
+    node two "Two"
+    edge first root -> one
+    edge second root -> two
+    "#;
+    let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
+    let (one, two) = (layout.nodes["one"], layout.nodes["two"]);
+    assert!(layout.nodes["root"].right().saturating_add(8) <= one.x);
+    assert!(one.bottom().saturating_add(4) <= two.y || two.bottom().saturating_add(4) <= one.y);
+}
+
+#[test]
+fn canvas_expands_for_free_text_without_a_viewport() {
+    let source = "diagram text \"Dynamic title\"\ntext note \"far note\" at 80,30\n";
+    let layout = layout_diagram(&parse(source).unwrap(), &Default::default()).unwrap();
+    assert!(layout.size.width >= 90);
+    assert!(layout.size.height >= 33);
+}

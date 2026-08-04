@@ -15,7 +15,7 @@ pub(super) fn apply(
 ) -> Result<()> {
     for constraint in &diagram.constraints {
         apply_one(constraint, diagram, nodes, groups)?;
-        super::refresh_inferred_groups(diagram, nodes, groups);
+        super::groups::refresh(diagram, nodes, groups);
     }
     Ok(())
 }

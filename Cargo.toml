@@ -40,6 +40,7 @@ harness = false
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 crossterm = "0.29"
+dagre = "0.1.1"
 indexmap = { version = "2.7", features = ["serde"] }
 ratatui = "=0.30.2"
 serde = { version = "1.0", features = ["derive"] }
