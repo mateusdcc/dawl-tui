@@ -9,12 +9,14 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-main);
   font-family: var(--font-body);
-  line-height: 1.5;
+  font-size: 1.05rem;
+  line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
+  letter-spacing: 0.3px;
 }
 
-/* CRT Screen Effect */
+/* CRT Screen Effect - Subtler scanlines for clean readability */
 .crt-overlay {
   position: fixed;
   top: 0;
@@ -23,22 +25,22 @@ body {
   height: 100vh;
   pointer-events: none;
   z-index: 9999;
+  opacity: 0.35;
   background: linear-gradient(
-    var(--crt-scanline) 50%,
-    rgba(0, 0, 0, 0.4) 50%
+    rgba(18, 16, 16, 0.2) 50%,
+    rgba(0, 0, 0, 0.25) 50%
   );
   background-size: 100% 4px;
 }
 
 .crt-flicker {
-  animation: flicker 0.15s infinite;
-  opacity: 0.98;
+  animation: flicker 0.2s infinite;
 }
 
 @keyframes flicker {
-  0% { opacity: 0.97; }
-  50% { opacity: 1; }
-  100% { opacity: 0.98; }
+  0% { opacity: 0.33; }
+  50% { opacity: 0.36; }
+  100% { opacity: 0.34; }
 }
 
 .app-container {
@@ -47,12 +49,13 @@ body {
   min-height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 10px 20px;
+  padding: 15px 24px;
 }
 
 a {
   color: var(--text-cyan);
   text-decoration: none;
+  font-weight: bold;
 }
 
 a:hover {
@@ -61,8 +64,8 @@ a:hover {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -72,6 +75,7 @@ a:hover {
 
 ::-webkit-scrollbar-thumb {
   background: var(--text-dim);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

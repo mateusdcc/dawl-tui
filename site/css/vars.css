@@ -1,42 +1,42 @@
 /* Y2K UNIX Terminal Color Palette & CSS Variables */
 :root {
-  --bg-primary: #0a0d0f;
-  --bg-secondary: #10161a;
-  --bg-tertiary: #162026;
-  --bg-terminal: #05080a;
-  --border-color: #00ff6633;
-  --border-glow: #00ff6688;
+  --bg-primary: #080b0d;
+  --bg-secondary: #0f1519;
+  --bg-tertiary: #151d23;
+  --bg-terminal: #030608;
+  --border-color: #00ff7744;
+  --border-glow: #00ff7799;
   
-  --text-main: #00ff66;
-  --text-dim: #00aa44;
-  --text-bright: #33ff88;
+  --text-main: #00ff77;
+  --text-dim: #77b895;
+  --text-bright: #ffffff;
   --text-cyan: #00f3ff;
   --text-amber: #ffb000;
   --text-magenta: #ff007f;
-  --text-muted: #4a6b5d;
+  --text-muted: #5b7e6e;
 
   --font-mono: "VT323", "Share Tech Mono", "Courier New", monospace;
   --font-body: "Share Tech Mono", "Courier New", monospace;
 
-  --crt-scanline: rgba(18, 16, 16, 0.3);
-  --glass-bg: rgba(10, 13, 15, 0.85);
-  --shadow-glow: 0 0 15px rgba(0, 255, 102, 0.25);
+  --crt-scanline: rgba(18, 16, 16, 0.2);
+  --glass-bg: rgba(8, 11, 13, 0.9);
+  --shadow-glow: 0 0 15px rgba(0, 255, 119, 0.3);
 }
 
 .theme-amber {
   --text-main: #ffb000;
-  --text-dim: #cc8800;
-  --text-bright: #ffc43d;
-  --border-color: #ffb00033;
-  --border-glow: #ffb00088;
-  --shadow-glow: 0 0 15px rgba(255, 176, 0, 0.25);
+  --text-dim: #cca055;
+  --text-bright: #ffffff;
+  --border-color: #ffb00044;
+  --border-glow: #ffb00099;
+  --shadow-glow: 0 0 15px rgba(255, 176, 0, 0.3);
 }
 
 .theme-cyan {
   --text-main: #00f3ff;
-  --text-dim: #00a3cc;
-  --text-bright: #59f7ff;
-  --border-color: #00f3ff33;
-  --border-glow: #00f3ff88;
-  --shadow-glow: 0 0 15px rgba(0, 243, 255, 0.25);
+  --text-dim: #60c5db;
+  --text-bright: #ffffff;
+  --border-color: #00f3ff44;
+  --border-glow: #00f3ff99;
+  --shadow-glow: 0 0 15px rgba(0, 243, 255, 0.3);
 }
