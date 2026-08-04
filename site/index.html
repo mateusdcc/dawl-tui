@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAWL-TUI | Y2K UNIX Terminal Workflow Engine</title>
+  <meta name="description" content="Deterministic compound workflow diagrams for the terminal, written in Rust. Y2K CRT unix terminal interface.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/vars.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/terminal.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/views.css">
+</head>
+<body>
+
+  <!-- CRT Scanlines Effect Overlay -->
+  <div class="crt-overlay crt-flicker"></div>
+
+  <div class="app-container">
+    <!-- Header Navigation -->
+    <header class="nav-header">
+      <div>
+        <h1 class="brand-title">DAWL-TUI v0.1.0</h1>
+        <div style="font-size: 0.85rem; color: var(--text-dim);">UNIX System System System / tty1</div>
+      </div>
+      <nav>
+        <ul class="nav-links">
+          <li><button class="nav-btn active" data-view="landing">Home</button></li>
+          <li><button class="nav-btn" data-view="examples">Examples Library</button></li>
+          <li><button class="nav-btn" data-view="docs">Documentation</button></li>
+          <li><button class="nav-btn" data-view="changelog">Changelog</button></li>
+        </ul>
+      </nav>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <select id="select-theme" class="retro-btn" style="padding: 4px 8px; font-size: 0.85rem;">
+          <option value="green">PHOSPHOR GREEN</option>
+          <option value="amber">AMBER MONOCHROME</option>
+          <option value="cyan">CYAN MATRIX</option>
+        </select>
+        <button id="toggle-crt" class="retro-btn" style="padding: 4px 8px; font-size: 0.85rem;">CRT TOGGLE</button>
+      </div>
+    </header>
+
+    <!-- Main View Container -->
+    <main id="main-view" style="flex: 1; padding: 10px 0;">
+    </main>
+
+    <!-- Retro UNIX Status Bar Footer -->
+    <footer class="status-bar">
+      <div>SYSTEM: DAWL-TUI 0.1.0 | HOST: unix-box-9000 | ARCH: x86_64-rustc</div>
+      <div id="sys-uptime">UPTIME: 9h 40m 20s</div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
